@@ -3,12 +3,11 @@ import { U } from '../utils/formatters.js';
 export function getInitialSaaSDatabase() {
   const T = U.today();
 
-  // Valores adaptados a Reales Brasileños (R$ / BRL)
   const planes = [
     {
       id: 'plan_starter',
       nombre: 'Starter Micro',
-      precio: 149.00, // R$ 149,00 / mês
+      precio: 149.00,
       intervalo: 'mes',
       maxRutas: 3,
       maxClientes: 250,
@@ -20,7 +19,7 @@ export function getInitialSaaSDatabase() {
     {
       id: 'plan_pro',
       nombre: 'Pro Rotas',
-      precio: 349.00, // R$ 349,00 / mês
+      precio: 349.00,
       intervalo: 'mes',
       maxRutas: 10,
       maxClientes: 1200,
@@ -32,7 +31,7 @@ export function getInitialSaaSDatabase() {
     {
       id: 'plan_enterprise',
       nombre: 'Enterprise Escala',
-      precio: 790.00, // R$ 790,00 / mês
+      precio: 790.00,
       intervalo: 'mes',
       maxRutas: 50,
       maxClientes: 10000,
@@ -59,10 +58,10 @@ export function getInitialSaaSDatabase() {
         moneda: 'BRL',
         geocercaMetros: 50,
         interesDefault: 20,
-        ventaMaxSinLlave: 3000.00, // R$ 3.000
-        gastoMaxSinLlave: 150.00,   // R$ 150
-        cupoClienteNuevo: 1500.00,  // R$ 1.500
-        cajaInicialDefault: 1000.00 // R$ 1.000
+        ventaMaxSinLlave: 3000.00,
+        gastoMaxSinLlave: 150.00,
+        cupoClienteNuevo: 1500.00,
+        cajaInicialDefault: 1000.00
       }
     },
     {
@@ -88,19 +87,18 @@ export function getInitialSaaSDatabase() {
     }
   ];
 
+  // Definición de Roles neutros con claves i18n
   const roles = [
     {
       id: 'super_admin',
-      nombre: 'Super Administrador SaaS',
+      key: 'super_admin',
       tenantId: null,
-      desc: 'Controle mestre da plataforma SaaS, empresas, planos e faturamento global.',
       permisos: ['saas_tenants_manage', 'saas_plans_manage', 'saas_analytics', 'all']
     },
     {
       id: 'tenant_admin',
-      nombre: 'Administrador da Empresa',
+      key: 'tenant_admin',
       tenantId: 'tenant_1',
-      desc: 'Controle total da operação: rotas, fechamento de caixa, liberação de chaves OTP e equipe.',
       permisos: [
         'recaudo_cobrar', 'recaudo_geocerca_bypass', 'ventas_crear', 'ventas_aprobar',
         'caja_abrir_cerrar', 'caja_modificar_base', 'gastos_registrar', 'gastos_aprobar',
@@ -109,9 +107,8 @@ export function getInitialSaaSDatabase() {
     },
     {
       id: 'supervisor',
-      nombre: 'Supervisor Operacional',
+      key: 'supervisor',
       tenantId: 'tenant_1',
-      desc: 'Supervisão de cobradores em campo em tempo real, auditoria de rotas e aprovações.',
       permisos: [
         'recaudo_cobrar', 'ventas_crear', 'ventas_aprobar', 'gastos_aprobar',
         'rutas_reordenar', 'clientes_modificar_cupo', 'reportes_auditoria'
@@ -119,9 +116,8 @@ export function getInitialSaaSDatabase() {
     },
     {
       id: 'cobrador',
-      nombre: 'Cobrador em Campo',
+      key: 'cobrador',
       tenantId: 'tenant_1',
-      desc: 'App móvel porta a porta, recebimento de parcelas offline e despesas de rota.',
       permisos: ['recaudo_cobrar', 'ventas_crear', 'caja_abrir_cerrar', 'gastos_registrar']
     }
   ];
@@ -276,7 +272,7 @@ export function getInitialSaaSDatabase() {
   ];
 
   return {
-    version: '2.0.0-vue-saas-brl',
+    version: '2.0.0-vue-saas-dynamic-i18n',
     seedDate: T,
     seqRecibo: 1004,
     planes,

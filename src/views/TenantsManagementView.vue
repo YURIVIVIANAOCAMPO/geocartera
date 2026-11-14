@@ -44,7 +44,7 @@
         <div>
           <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">{{ t('mrrKpi') }}</span>
           <div class="text-2xl font-black text-slate-900 mt-0.5">{{ U.money(totalMRR, 'BRL', saasState.locale) }}</div>
-          <span class="text-xs text-slate-400 font-medium">Recorrente mensal</span>
+          <span class="text-xs text-slate-400 font-medium">{{ t('monthlyRecurring') }}</span>
         </div>
       </div>
 
@@ -76,7 +76,7 @@
       <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h3 class="font-bold text-slate-900 text-base">{{ t('tenantsDirectory') }}</h3>
-          <p class="text-xs text-slate-500">Isolamento de banco e regras por empresa</p>
+          <p class="text-xs text-slate-500">{{ t('tenantDbIsolation') }}</p>
         </div>
 
         <div class="w-full sm:w-64 relative">
@@ -120,17 +120,17 @@
                 <span class="font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-lg text-xs">
                   {{ getPlan(tItem.planId)?.nombre || tItem.planId }}
                 </span>
-                <div class="text-xs text-slate-400 mt-1 font-medium">{{ U.money(getPlan(tItem.planId)?.precio, 'BRL', saasState.locale) }}/mês</div>
+                <div class="text-xs text-slate-400 mt-1 font-medium">{{ U.money(getPlan(tItem.planId)?.precio, 'BRL', saasState.locale) }}{{ t('perMonth') }}</div>
               </td>
-              <td class="p-4 font-semibold text-slate-800">
-                {{ getRutasDeTenant(tItem.id).length }} de {{ getPlan(tItem.planId)?.maxRutas || 10 }} rotas
+              <td class="p-4 font-semibold text-slate-800 text-xs">
+                {{ getRutasDeTenant(tItem.id).length }} {{ t('routesOf') }} {{ getPlan(tItem.planId)?.maxRutas || 10 }}
               </td>
               <td class="p-4">
                 <span 
                   :class="tItem.estadoSuscripcion === 'activa' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'" 
                   class="px-2.5 py-1 rounded-full text-xs font-bold border"
                 >
-                  {{ tItem.estadoSuscripcion.toUpperCase() }}
+                  {{ tItem.estadoSuscripcion === 'activa' ? t('activeStatus') : t('inactiveStatus') }}
                 </span>
               </td>
               <td class="p-4 text-slate-500 text-xs font-medium">
@@ -186,25 +186,25 @@
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block font-bold text-slate-700 mb-1.5 text-xs">Cidade</label>
+              <label class="block font-bold text-slate-700 mb-1.5 text-xs">{{ t('city') }}</label>
               <input v-model="newTenantForm.ciudad" type="text" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:border-indigo-600">
             </div>
             <div>
-              <label class="block font-bold text-slate-700 mb-1.5 text-xs">Telefone</label>
+              <label class="block font-bold text-slate-700 mb-1.5 text-xs">{{ t('phone') }}</label>
               <input v-model="newTenantForm.telefono" type="tel" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:border-indigo-600">
             </div>
           </div>
 
           <div>
-            <label class="block font-bold text-slate-700 mb-1.5 text-xs">E-mail Corporativo *</label>
+            <label class="block font-bold text-slate-700 mb-1.5 text-xs">{{ t('corporateEmail') }} *</label>
             <input v-model="newTenantForm.email" type="email" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:border-indigo-600" required>
           </div>
 
           <div>
-            <label class="block font-bold text-slate-700 mb-1.5 text-xs">{{ t('contractedPlan') }} *</label>
-            <select v-model="newTenantForm.planId" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:border-indigo-600 font-semibold" required>
+            <label class="block font-bold text-slate-700 mb-1.5 text-xs">{{ t('contractedPlan') }}</label>
+            <select v-model="newTenantForm.planId" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:border-indigo-600 font-semibold">
               <option v-for="p in planes" :key="p.id" :value="p.id">
-                {{ p.nombre }} ({{ U.money(p.precio, 'BRL', saasState.locale) }}/mês)
+                {{ p.nombre }} - {{ U.money(p.precio, 'BRL', saasState.locale) }}{{ t('perMonth') }} (Máx {{ p.maxRutas }} rotas)
               </option>
             </select>
           </div>
@@ -213,7 +213,7 @@
             <button type="button" @click="showNewTenantModal = false" class="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition">
               {{ t('cancel') }}
             </button>
-            <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-md transition">
+            <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-md transition active:scale-95">
               {{ t('newTenant') }}
             </button>
           </div>
@@ -221,47 +221,50 @@
       </div>
     </div>
 
-    <!-- Modal Configuração Parâmetros Tenant -->
-    <div v-if="configTenant" class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 sm:p-8 animate-in zoom-in-95 duration-200">
+    <!-- Modal Parâmetros / Configuração de Tenant -->
+    <div v-if="editingTenantConfig" class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-in zoom-in-95 duration-200">
         <div class="flex justify-between items-center pb-4 border-b border-slate-100 mb-5">
           <div>
-            <h3 class="font-extrabold text-slate-900 text-lg">{{ t('parameters') }}</h3>
-            <p class="text-xs text-slate-500 font-medium">{{ configTenant.nombreEmpresa }}</p>
+            <h3 class="font-extrabold text-slate-900 text-lg">{{ t('parameters') }}: {{ editingTenantConfig.codigo }}</h3>
+            <p class="text-xs text-slate-500">{{ editingTenantConfig.nombreEmpresa }}</p>
           </div>
-          <button @click="configTenant = null" class="text-slate-400 hover:text-slate-700 p-1">
+          <button @click="editingTenantConfig = null" class="text-slate-400 hover:text-slate-700 p-1">
             <BaseIcon name="x" size="md" />
           </button>
         </div>
 
-        <form @submit.prevent="handleSaveTenantConfig" class="space-y-4 text-sm">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1.5 text-xs">Raio Cerca GPS (Metros)</label>
-              <input v-model.number="configTenant.configuracion.geocercaMetros" type="number" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl" min="10" max="300" required>
-            </div>
-            <div>
-              <label class="block font-bold text-slate-700 mb-1.5 text-xs">Juros Padrão (%)</label>
-              <input v-model.number="configTenant.configuracion.interesDefault" type="number" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl" min="1" max="100" required>
-            </div>
+        <form @submit.prevent="saveConfig" class="space-y-4 text-xs font-bold text-slate-700">
+          <div>
+            <label class="block mb-1">Geocerca de Validação GPS (metros)</label>
+            <input v-model.number="configForm.geocercaMetros" type="number" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl font-mono text-sm" required>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1.5 text-xs">Empréstimo Máx Sem Chave (R$)</label>
-              <input v-model.number="configTenant.configuracion.ventaMaxSinLlave" type="number" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl" step="50" required>
-            </div>
-            <div>
-              <label class="block font-bold text-slate-700 mb-1.5 text-xs">Despesa Máx Sem Chave (R$)</label>
-              <input v-model.number="configTenant.configuracion.gastoMaxSinLlave" type="number" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl" step="10" required>
-            </div>
+          <div>
+            <label class="block mb-1">Taxa de Juros Padrão (%)</label>
+            <input v-model.number="configForm.interesDefault" type="number" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl font-mono text-sm" required>
+          </div>
+
+          <div>
+            <label class="block mb-1">Venda Máxima sem Chave OTP (R$)</label>
+            <input v-model.number="configForm.ventaMaxSinLlave" type="number" step="0.01" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl font-mono text-sm" required>
+          </div>
+
+          <div>
+            <label class="block mb-1">Despesa Máxima sem Chave OTP (R$)</label>
+            <input v-model.number="configForm.gastoMaxSinLlave" type="number" step="0.01" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl font-mono text-sm" required>
+          </div>
+
+          <div>
+            <label class="block mb-1">Limite Inicial de Cliente Novo (R$)</label>
+            <input v-model.number="configForm.cupoClienteNuevo" type="number" step="0.01" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl font-mono text-sm" required>
           </div>
 
           <div class="flex justify-end gap-3 pt-5 border-t border-slate-100">
-            <button type="button" @click="configTenant = null" class="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition">
-              {{ t('close') }}
+            <button type="button" @click="editingTenantConfig = null" class="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition">
+              {{ t('cancel') }}
             </button>
-            <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-md transition">
+            <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-md transition active:scale-95">
               {{ t('saveParameters') }}
             </button>
           </div>
@@ -279,36 +282,14 @@ import { i18n } from '../utils/i18n.js';
 import BaseIcon from '../components/BaseIcon.vue';
 
 function t(key) {
-  const lang = saasState.locale || 'pt';
+  const lang = saasState.locale || 'es';
   return (i18n[lang] && i18n[lang][key]) || (i18n['es'] && i18n['es'][key]) || key;
 }
 
-const tenants = computed(() => saasState.db.tenants);
-const planes = computed(() => saasState.db.planes);
 const searchFilter = ref('');
-
-const filteredTenants = computed(() => {
-  if (!searchFilter.value.trim()) return tenants.value;
-  const q = searchFilter.value.toLowerCase();
-  return tenants.value.filter(t => 
-    t.nombreEmpresa.toLowerCase().includes(q) || 
-    t.codigo.toLowerCase().includes(q) || 
-    t.nit.toLowerCase().includes(q)
-  );
-});
-
-const totalMRR = computed(() => {
-  return tenants.value.reduce((sum, item) => {
-    const plan = getPlan(item.planId);
-    return sum + (plan ? plan.precio : 0);
-  }, 0);
-});
-
-const totalRutas = computed(() => saasState.db.cobradores.length);
-const totalClientes = computed(() => saasState.db.clientes.length);
-
 const showNewTenantModal = ref(false);
-const configTenant = ref(null);
+const editingTenantConfig = ref(null);
+const configForm = ref({});
 
 const newTenantForm = ref({
   nombreEmpresa: '',
@@ -320,6 +301,30 @@ const newTenantForm = ref({
   planId: 'plan_starter'
 });
 
+const tenants = computed(() => saasState.db.tenants || []);
+const planes = computed(() => saasState.db.planes || []);
+
+const filteredTenants = computed(() => {
+  const q = searchFilter.value.trim().toLowerCase();
+  if (!q) return tenants.value;
+  return tenants.value.filter(t => 
+    t.nombreEmpresa.toLowerCase().includes(q) || 
+    t.codigo.toLowerCase().includes(q) ||
+    t.nit.toLowerCase().includes(q)
+  );
+});
+
+const totalMRR = computed(() => {
+  return tenants.value.reduce((acc, t) => {
+    if (t.estadoSuscripcion !== 'activa') return acc;
+    const plan = getPlan(t.planId);
+    return acc + (plan ? plan.precio : 0);
+  }, 0);
+});
+
+const totalRutas = computed(() => saasState.db.cobradores.length);
+const totalClientes = computed(() => saasState.db.clientes.length);
+
 function getPlan(planId) {
   return planes.value.find(p => p.id === planId);
 }
@@ -329,7 +334,15 @@ function getRutasDeTenant(tenantId) {
 }
 
 function openConfigModal(tenant) {
-  configTenant.value = JSON.parse(JSON.stringify(tenant));
+  editingTenantConfig.value = tenant;
+  configForm.value = JSON.parse(JSON.stringify(tenant.configuracion || {}));
+}
+
+function saveConfig() {
+  if (editingTenantConfig.value) {
+    saasActions.updateTenantConfig(editingTenantConfig.value.id, configForm.value);
+    editingTenantConfig.value = null;
+  }
 }
 
 function handleCreateTenant() {
@@ -344,12 +357,5 @@ function handleCreateTenant() {
     email: '',
     planId: 'plan_starter'
   };
-}
-
-function handleSaveTenantConfig() {
-  if (configTenant.value) {
-    saasActions.updateTenantConfig(configTenant.value.id, configTenant.value.configuracion);
-    configTenant.value = null;
-  }
 }
 </script>

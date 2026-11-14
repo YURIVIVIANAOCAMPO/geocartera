@@ -58,7 +58,7 @@
               class="text-xs bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-400/30 px-3 py-1 rounded-full font-bold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
             >
               <BaseIcon name="spark" size="xs" />
-              <span>Otimizar Rota</span>
+              <span>{{ t('optimizeRoute2opt') }}</span>
             </button>
           </div>
 
@@ -75,8 +75,8 @@
           </div>
 
           <div class="flex justify-between text-[11px] text-slate-400 mt-2 font-medium">
-            <span>Meta: <b class="text-slate-200">{{ U.money(metaHoy, 'BRL', saasState.locale) }}</b></span>
-            <span>{{ clientesRuta.length }} clientes na rota</span>
+            <span>{{ t('targetLabel') }}: <b class="text-slate-200">{{ U.money(metaHoy, 'BRL', saasState.locale) }}</b></span>
+            <span>{{ clientesRuta.length }} {{ t('clientsInRoute') }}</span>
           </div>
         </div>
 
@@ -151,11 +151,11 @@
         <div v-if="activeTab === 'mapa'" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex justify-between items-center">
             <div>
-              <h3 class="font-bold text-slate-900 text-sm">Geocercas Satelitais</h3>
-              <p class="text-xs text-slate-500">Raio de segurança de 50 metros</p>
+              <h3 class="font-bold text-slate-900 text-sm">{{ t('geofencesTitle') }}</h3>
+              <p class="text-xs text-slate-500">{{ t('geofencesDesc') }}</p>
             </div>
             <button @click="simularGPS" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-xl border border-indigo-200 transition">
-              Simular GPS
+              {{ t('simulateGps') }}
             </button>
           </div>
 
@@ -175,8 +175,8 @@
           </div>
 
           <div class="flex gap-4 text-xs text-slate-600 justify-center font-medium">
-            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></i> Pago</span>
-            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></i> Pendente</span>
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></i> {{ t('paidStatus') }}</span>
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></i> {{ t('pendingStatus') }}</span>
           </div>
         </div>
 
@@ -204,7 +204,7 @@
           </div>
 
           <button 
-            @click="saasActions.showToast('Fechamento de caixa registrado!')" 
+            @click="saasActions.showToast(t('cashboxClosedNotice'))" 
             class="w-full py-3 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl text-xs shadow-lg transition active:scale-95"
           >
             {{ t('closeDayCashbox') }}
@@ -312,7 +312,7 @@ import { i18n } from '../utils/i18n.js';
 import BaseIcon from '../components/BaseIcon.vue';
 
 function t(key) {
-  const lang = saasState.locale || 'pt';
+  const lang = saasState.locale || 'es';
   return (i18n[lang] && i18n[lang][key]) || (i18n['es'] && i18n['es'][key]) || key;
 }
 
@@ -322,7 +322,6 @@ function toggleLang() {
 }
 
 const activeTab = ref('ruta');
-const currentTenant = saasGetters.currentTenant;
 const currentCobrador = computed(() => {
   const cid = saasState.currentSession?.cobradorId || 'c1';
   return saasState.db.cobradores.find(c => c.id === cid) || saasState.db.cobradores[0];
@@ -383,7 +382,7 @@ function openClientModal(cl) {
 }
 
 function simularGPS() {
-  saasActions.showToast('GPS sincronizado');
+  saasActions.showToast(t('gpsSyncedNotice'));
 }
 
 function handlePagar() {
@@ -403,9 +402,9 @@ function handlePagar() {
     return;
   }
   if (res.pendiente) {
-    saasActions.showToast('Requiere Llave del Administrador', 'warning');
+    saasActions.showToast(t('keyRequiredWarning'), 'warning');
   } else {
-    saasActions.showToast('Abono registrado!');
+    saasActions.showToast(t('paymentSuccessNotice'));
   }
   selectedClient.value = null;
 }

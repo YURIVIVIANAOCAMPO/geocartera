@@ -55,10 +55,10 @@
         <div class="flex justify-between items-center mb-5">
           <div>
             <h3 class="font-extrabold text-slate-900 text-lg tracking-tight">{{ t('routesPerformance') }}</h3>
-            <p class="text-xs text-slate-500">Monitoramento em tempo real dos cobradores em campo</p>
+            <p class="text-xs text-slate-500">{{ t('routesMonitoringDesc') }}</p>
           </div>
           <span class="text-xs bg-slate-100 font-bold text-slate-600 px-3 py-1 rounded-full">
-            Jornada de Hoje
+            {{ t('todayShift') }}
           </span>
         </div>
 
@@ -83,7 +83,7 @@
             </div>
 
             <div class="flex justify-between items-center mt-3 text-xs text-slate-500 font-medium">
-              <span>Progresso: <b class="text-slate-700">{{ getPorcentaje(c.id) }}%</b></span>
+              <span>{{ t('progress') }}: <b class="text-slate-700">{{ getPorcentaje(c.id) }}%</b></span>
               <button 
                 @click="saasActions.optimizarRuta(c.id)" 
                 class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1.5 transition active:scale-95"
@@ -102,7 +102,7 @@
           <div class="flex justify-between items-center mb-5">
             <div>
               <h3 class="font-extrabold text-slate-900 text-lg tracking-tight">{{ t('keysModuleTitle') }}</h3>
-              <p class="text-xs text-slate-500">Autorizações remotas instantâneas</p>
+              <p class="text-xs text-slate-500">{{ t('keysModuleSubtitle') }}</p>
             </div>
             <span 
               :class="autorizacionesPendientes.length > 0 ? 'bg-amber-100 text-amber-900 font-black' : 'bg-slate-100 text-slate-500 font-bold'" 
@@ -117,7 +117,7 @@
               <BaseIcon name="check" size="md" />
             </div>
             <p class="font-medium text-slate-600">{{ t('noPendingKeys') }}</p>
-            <span class="text-xs text-slate-400 mt-1 block">Toda a operação está dentro dos limites pré-aprovados</span>
+            <span class="text-xs text-slate-400 mt-1 block">{{ t('allWithinLimits') }}</span>
           </div>
 
           <div v-else class="space-y-3.5">
@@ -146,7 +146,7 @@
         </div>
 
         <div class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
-          💡 As chaves de 6 dígitos autorizam operações acima do limite ou cobranças a mais de 50 metros.
+          {{ t('keysHelpTip') }}
         </div>
       </div>
     </div>
@@ -161,7 +161,7 @@ import { i18n } from '../utils/i18n.js';
 import BaseIcon from '../components/BaseIcon.vue';
 
 function t(key) {
-  const lang = saasState.locale || 'pt';
+  const lang = saasState.locale || 'es';
   return (i18n[lang] && i18n[lang][key]) || (i18n['es'] && i18n['es'][key]) || key;
 }
 

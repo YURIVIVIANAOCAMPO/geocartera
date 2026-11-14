@@ -4,9 +4,9 @@
       <div>
         <div class="flex items-center gap-2 mb-1.5">
           <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-100">
-            Segurança & RBAC
+            {{ t('securityBadge') }}
           </span>
-          <span class="text-xs text-slate-400">Controle Granular de Acesso</span>
+          <span class="text-xs text-slate-400">{{ t('accessControlBadge') }}</span>
         </div>
         <h2 class="text-2xl font-black text-slate-900 tracking-tight">{{ t('rbacTitle') }}</h2>
         <p class="text-sm text-slate-500 mt-0.5">{{ t('rbacSubtitle') }} <b>{{ currentTenant?.nombreEmpresa }}</b></p>
@@ -39,12 +39,12 @@
       >
         <div>
           <div class="flex justify-between items-center mb-1.5">
-            <span class="font-extrabold text-slate-900 text-sm">{{ rol.nombre }}</span>
+            <span class="font-extrabold text-slate-900 text-sm">{{ getRoleName(rol) }}</span>
             <span class="text-[10px] bg-slate-100 px-2.5 py-0.5 rounded-full font-black text-slate-600 border border-slate-200/60">
               {{ rol.permisos.length }} {{ t('rolePermsCount') }}
             </span>
           </div>
-          <p class="text-xs text-slate-500 mb-4 leading-relaxed">{{ rol.desc }}</p>
+          <p class="text-xs text-slate-500 mb-4 leading-relaxed">{{ getRoleDesc(rol) }}</p>
         </div>
         <button 
           @click="openEditPerms(rol)" 
@@ -61,10 +61,10 @@
       <div class="p-5 sm:p-6 border-b border-slate-100 flex justify-between items-center">
         <div>
           <h3 class="font-bold text-slate-900 text-base">{{ t('registeredStaff') }}</h3>
-          <p class="text-xs text-slate-500">Membros com credenciais nesta empresa</p>
+          <p class="text-xs text-slate-500">{{ t('membersWithCredentials') }}</p>
         </div>
         <span class="text-xs bg-slate-100 px-3 py-1 rounded-full font-bold text-slate-600">
-          {{ usuarios.length }} contas
+          {{ usuarios.length }} {{ t('accountsCount') }}
         </span>
       </div>
 
@@ -87,7 +87,7 @@
               <td class="p-4 font-mono text-xs text-slate-600">{{ u.email }}</td>
               <td class="p-4">
                 <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                  {{ getRoleName(u.rolId) }}
+                  {{ getRoleNameById(u.rolId) }}
                 </span>
               </td>
               <td class="p-4 text-xs font-medium">
@@ -95,14 +95,14 @@
                   <BaseIcon name="route" size="xs" class="text-slate-400" />
                   {{ getCobrador(u.cobradorId).zona }}
                 </span>
-                <span v-else class="text-slate-400">Usuário de Escritório</span>
+                <span v-else class="text-slate-400">{{ t('officeUser') }}</span>
               </td>
               <td class="p-4">
                 <span 
                   :class="u.estado === 'activo' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'" 
                   class="px-2.5 py-1 rounded-full text-xs font-bold border"
                 >
-                  {{ u.estado.toUpperCase() }}
+                  {{ u.estado === 'activo' ? t('activeStatus') : t('inactiveStatus') }}
                 </span>
               </td>
               <td class="p-4 text-xs text-slate-500 font-medium">
@@ -128,8 +128,8 @@
       <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
         <div class="flex justify-between items-center pb-4 border-b border-slate-100 mb-5 shrink-0">
           <div>
-            <h3 class="font-extrabold text-slate-900 text-lg">{{ t('configurePerms') }}: {{ editingRole.nombre }}</h3>
-            <p class="text-xs text-slate-500 font-medium">Defina com precisão o que este perfil pode acessar e executar</p>
+            <h3 class="font-extrabold text-slate-900 text-lg">{{ t('configurePerms') }}: {{ getRoleName(editingRole) }}</h3>
+            <p class="text-xs text-slate-500 font-medium">{{ t('definePermissionsMsg') }}</p>
           </div>
           <button @click="editingRole = null" class="text-slate-400 hover:text-slate-700 p-1">
             <BaseIcon name="x" size="md" />
@@ -137,8 +137,8 @@
         </div>
 
         <div class="overflow-y-auto flex-1 pr-2 space-y-4">
-          <div v-for="(catPerms, catName) in permisosPorCategoria" :key="catName" class="border border-slate-200 rounded-2xl p-4 bg-slate-50/50">
-            <h4 class="font-black text-xs text-indigo-700 uppercase tracking-wider border-b border-slate-200/80 pb-2 mb-3">{{ catName }}</h4>
+          <div v-for="(catPerms, catKey) in permisosPorCategoria" :key="catKey" class="border border-slate-200 rounded-2xl p-4 bg-slate-50/50">
+            <h4 class="font-black text-xs text-indigo-700 uppercase tracking-wider border-b border-slate-200/80 pb-2 mb-3">{{ t(catKey) }}</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <label 
                 v-for="p in catPerms" 
@@ -147,8 +147,8 @@
               >
                 <input type="checkbox" :value="p.id" v-model="editingRole.permisos" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4">
                 <div>
-                  <div class="text-xs font-bold text-slate-900">{{ p.nombre }}</div>
-                  <div class="text-[11px] text-slate-500 leading-snug mt-0.5">{{ p.desc }}</div>
+                  <div class="text-xs font-bold text-slate-900">{{ t('perm_' + p.id) }}</div>
+                  <div class="text-[11px] text-slate-500 leading-snug mt-0.5">{{ t('perm_' + p.id + '_desc') }}</div>
                 </div>
               </label>
             </div>
@@ -190,14 +190,14 @@
           <div>
             <label class="block font-bold text-slate-700 mb-1.5 text-xs">{{ t('assignedRole') }} *</label>
             <select v-model="newUserForm.rolId" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:border-emerald-600 font-semibold" required>
-              <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.nombre }}</option>
+              <option v-for="r in roles" :key="r.id" :value="r.id">{{ getRoleName(r) }}</option>
             </select>
           </div>
 
           <div>
             <label class="block font-bold text-slate-700 mb-1.5 text-xs">{{ t('linkedRoute') }}</label>
             <select v-model="newUserForm.cobradorId" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:border-emerald-600 font-medium">
-              <option :value="null">-- Nenhum (Usuário Administrativo) --</option>
+              <option :value="null">{{ t('noneOfficeUser') }}</option>
               <option v-for="c in cobradores" :key="c.id" :value="c.id">{{ c.nombre }} ({{ c.zona }})</option>
             </select>
           </div>
@@ -224,25 +224,25 @@ import { i18n } from '../utils/i18n.js';
 import BaseIcon from '../components/BaseIcon.vue';
 
 function t(key) {
-  const lang = saasState.locale || 'pt';
+  const lang = saasState.locale || 'es';
   return (i18n[lang] && i18n[lang][key]) || (i18n['es'] && i18n['es'][key]) || key;
 }
 
 const currentTenant = saasGetters.currentTenant;
 
 const CATALOGO_PERMISOS = [
-  { id: 'recaudo_cobrar', nombre: 'Registrar Cobranças', desc: 'Permite registrar recebimentos e visitas sem pagamento em campo', cat: 'Operação em Campo' },
-  { id: 'recaudo_geocerca_bypass', nombre: 'Ignorar Cerca GPS', desc: 'Permite receber a mais de 50 metros sem exigir chave OTP', cat: 'Operação em Campo' },
-  { id: 'ventas_crear', nombre: 'Registrar Empréstimos', desc: 'Permite cadastrar novas vendas ou renovações de crédito', cat: 'Vendas e Empréstimos' },
-  { id: 'ventas_aprobar', nombre: 'Aprovar Pré-Empréstimos', desc: 'Autorizar solicitações que superem o limite pré-aprovado', cat: 'Vendas e Empréstimos' },
-  { id: 'caja_abrir_cerrar', nombre: 'Abertura e Fechamento de Caixa', desc: 'Realizar o fechamento diário e conferência física', cat: 'Fluxo de Caixa' },
-  { id: 'caja_modificar_base', nombre: 'Alterar Fundo Inicial', desc: 'Ajustar o valor de base entregue ao cobrador', cat: 'Fluxo de Caixa' },
-  { id: 'gastos_registrar', nombre: 'Lançar Despesas de Rota', desc: 'Informar gastos com gasolina, alimentação e moto', cat: 'Fluxo de Caixa' },
-  { id: 'gastos_aprobar', nombre: 'Aprovar Pré-Despesas', desc: 'Autorizar despesas extras acima do teto estipulado', cat: 'Fluxo de Caixa' },
-  { id: 'rutas_reordenar', nombre: 'Alterar e Otimizar Rotas', desc: 'Mudar a sequência de visitação dos clientes (2-opt)', cat: 'Rotas Inteligentes' },
-  { id: 'clientes_modificar_cupo', nombre: 'Ajustar Limites Financeiros', desc: 'Aumentar ou diminuir a linha de crédito do cliente', cat: 'Carteira de Clientes' },
-  { id: 'seguridad_usuarios', nombre: 'Gerenciar Usuários e Funções', desc: 'Criar equipe, atribuir permissões e bloquear contas', cat: 'Segurança e Auditoria' },
-  { id: 'reportes_auditoria', nombre: 'Auditoria e Exportação CSV', desc: 'Acesso ao log forense de operações e download de dados', cat: 'Segurança e Auditoria' }
+  { id: 'recaudo_cobrar', catKey: 'cat_campo' },
+  { id: 'recaudo_geocerca_bypass', catKey: 'cat_campo' },
+  { id: 'ventas_crear', catKey: 'cat_ventas' },
+  { id: 'ventas_aprobar', catKey: 'cat_ventas' },
+  { id: 'caja_abrir_cerrar', catKey: 'cat_caja' },
+  { id: 'caja_modificar_base', catKey: 'cat_caja' },
+  { id: 'gastos_registrar', catKey: 'cat_caja' },
+  { id: 'gastos_aprobar', catKey: 'cat_caja' },
+  { id: 'rutas_reordenar', catKey: 'cat_rutas' },
+  { id: 'clientes_modificar_cupo', catKey: 'cat_clientes' },
+  { id: 'seguridad_usuarios', catKey: 'cat_seguridad' },
+  { id: 'reportes_auditoria', catKey: 'cat_seguridad' }
 ];
 
 const roles = computed(() => {
@@ -260,8 +260,8 @@ const cobradores = computed(() => {
 const permisosPorCategoria = computed(() => {
   const map = {};
   CATALOGO_PERMISOS.forEach(p => {
-    map[p.cat] = map[p.cat] || [];
-    map[p.cat].push(p);
+    map[p.catKey] = map[p.catKey] || [];
+    map[p.catKey].push(p);
   });
   return map;
 });
@@ -277,9 +277,28 @@ const newUserForm = ref({
   cobradorId: null
 });
 
-function getRoleName(rolId) {
-  const r = saasState.db.roles.find(x => x.id === rolId);
-  return r ? r.nombre : rolId;
+function getRoleName(rol) {
+  if (!rol) return '';
+  const key = rol.key || rol.id;
+  const i18nKey = `role_${key}_name`;
+  const translated = t(i18nKey);
+  if (translated !== i18nKey) return translated;
+  return rol.nombre || key;
+}
+
+function getRoleDesc(rol) {
+  if (!rol) return '';
+  const key = rol.key || rol.id;
+  const i18nKey = `role_${key}_desc`;
+  const translated = t(i18nKey);
+  if (translated !== i18nKey) return translated;
+  return rol.desc || '';
+}
+
+function getRoleNameById(rolId) {
+  const r = saasState.db.roles.find(x => x.id === rolId || x.key === rolId);
+  if (!r) return rolId;
+  return getRoleName(r);
 }
 
 function getCobrador(cobId) {

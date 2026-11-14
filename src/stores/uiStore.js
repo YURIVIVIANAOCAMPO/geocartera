@@ -21,3 +21,4 @@ export function closeModal() {
 export function toggleMobileSidebar() {
   isMobileSidebarOpen.value = !isMobileSidebarOpen.value;
 }
+
