@@ -3,40 +3,958 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>GeoCartera · Demo Móvil & Web</title>
-  <meta name="description" content="Plataforma de gestión automatizada de cartera, cobros puerta a puerta y ventas en tiempo real con geocercas y soporte offline.">
-  <meta name="theme-color" content="#0f766e">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230f766e'/%3E%3Cpath d='M16 6.5a7.2 7.2 0 0 0-7.2 7.2c0 5.4 7.2 11.8 7.2 11.8s7.2-6.4 7.2-11.8A7.2 7.2 0 0 0 16 6.5z' fill='%23fff'/%3E%3Ctext x='16' y='17.2' text-anchor='middle' font-size='9' font-weight='800' fill='%230f766e' font-family='Arial,sans-serif'%3E$%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="css/app.css">
-</head>
-<body>
-  <!-- Contenedor principal de la aplicación -->
-  <div id="app-root"></div>
-
-  <!-- Raíz para modales / hojas de acción inferior -->
-  <div id="modal-root"></div>
-
-  <!-- Raíz para notificaciones toast -->
-  <div id="toast-root"></div>
-
-  <!-- Scripts del sistema GeoCartera -->
-  <script src="js/utils.js"></script>
-  <script src="js/seed.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/users.js"></script>
-  <script src="js/cobrador.js"></script>
-  <script src="js/admin.js"></script>
-  <script src="js/payview.js"></script>
-  <script src="js/app.js"></script>
-
+  <title>GeoCartera SaaS · Plataforma de Cartera y Cobranzas</title>
+  <meta name="theme-color" content="#4f46e5">
+  
+  <!-- Tailwind CSS CDN para Vue 3 standalone -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      GC.init();
-    });
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Vue.js 3 Production CDN -->
+  <script src="https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+  <!-- Contenedor Principal Vue 3 -->
+  <div id="app"></div>
+
+  <!-- Aplicación Vue.js 3 SaaS Modular -->
+  <script type="module">
+    import { createApp } from 'https://unpkg.com/vue@3.4.21/dist/vue.esm-browser.prod.js';
+    import { saasState, saasActions, saasGetters } from './src/stores/saasStore.js';
+    import { U } from './src/utils/formatters.js';
+
+    // Componente SVG BaseIcon
+    const BaseIcon = {
+      props: ['name'],
+      template: `
+        <svg class="w-5 h-5 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path v-if="name === 'building'" d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
+          <path v-else-if="name === 'users'" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+          <path v-else-if="name === 'key'" d="m15.5 8.5 3 3M17 10l2 2M10.5 13.5a5 5 0 1 1 7-7 5 5 0 0 1-7 7L3 21l-1-1 4-4-2-2 6.5-6.5z" />
+          <path v-else-if="name === 'shield'" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path v-else-if="name === 'dashboard'" d="M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z" />
+          <path v-else-if="name === 'route'" d="M6 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 0h8.5a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7H15M18 5a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+          <path v-else-if="name === 'wallet'" d="M21 12V7H5a2 2 0 0 1 0-4h14v4M3 7v14a2 2 0 0 0 2 2h16v-5M16 14h.01" />
+          <path v-else-if="name === 'cash'" d="M2 6h20v12H2zM6 12h.01M18 12h.01M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+          <path v-else-if="name === 'map'" d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2zm0 0v14M15 6v14" />
+          <path v-else-if="name === 'wifi'" d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+          <path v-else-if="name === 'wifioff'" d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19.08 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.58 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+          <path v-else-if="name === 'logout'" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+          <path v-else-if="name === 'plus'" d="M12 5v14M5 12h14" />
+          <path v-else-if="name === 'check'" d="m5 12 5 5L20 7" />
+          <path v-else-if="name === 'x'" d="M18 6 6 18M6 6l12 12" />
+          <path v-else-if="name === 'pin'" d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0zM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
+          <path v-else-if="name === 'gear'" d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          <path v-else d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      `
+    };
+
+    // Componente Principal
+    const App = {
+      components: { BaseIcon },
+      data() {
+        return {
+          saasState,
+          saasActions,
+          U,
+          currentView: 'tenants',
+          selectedTenantId: 'tenant_1',
+          
+          // Estados locales de formularios
+          showNewTenantModal: false,
+          showNewUserModal: false,
+          showPayModal: false,
+          editingRole: null,
+          configTenant: null,
+          activeMobileTab: 'ruta',
+
+          // Formularios
+          newTenantForm: {
+            nombreEmpresa: '',
+            codigo: '',
+            nit: '',
+            ciudad: '',
+            telefono: '',
+            email: '',
+            planId: 'plan_starter'
+          },
+          newUserForm: {
+            nombre: '',
+            email: '',
+            rolId: 'cobrador',
+            cobradorId: null
+          },
+          selectedClient: null,
+          simulatedDist: 15,
+          paymentAmount: 0,
+          paymentMethod: 'efectivo'
+        };
+      },
+      computed: {
+        session() {
+          return saasState.currentSession;
+        },
+        currentTenant() {
+          const s = this.session;
+          if (!s || !s.tenantId) {
+            return saasState.db.tenants.find(t => t.id === this.selectedTenantId) || saasState.db.tenants[0];
+          }
+          return saasState.db.tenants.find(t => t.id === s.tenantId) || saasState.db.tenants[0];
+        },
+        currentCobrador() {
+          const cid = this.session?.cobradorId || 'c1';
+          return saasState.db.cobradores.find(c => c.id === cid) || saasState.db.cobradores[0];
+        },
+        tenants() {
+          return saasState.db.tenants;
+        },
+        planes() {
+          return saasState.db.planes;
+        },
+        roles() {
+          return saasState.db.roles.filter(r => r.tenantId === this.currentTenant?.id || r.tenantId === null);
+        },
+        usuarios() {
+          return saasState.db.usuarios.filter(u => u.tenantId === this.currentTenant?.id);
+        },
+        cobradores() {
+          return saasState.db.cobradores.filter(c => c.tenantId === this.currentTenant?.id);
+        },
+        clientesRuta() {
+          return saasState.db.clientes
+            .filter(c => c.cobradorId === this.currentCobrador?.id)
+            .sort((a, b) => a.orden - b.orden);
+        },
+        creditosActivos() {
+          return saasState.db.creditos.filter(c => c.tenantId === this.currentTenant?.id && c.estado === 'activo');
+        },
+        saldoCarteraActiva() {
+          return this.creditosActivos.reduce((sum, cr) => sum + saasGetters.saldoDeCredito(cr), 0);
+        },
+        pagosHoy() {
+          const T = U.today();
+          return saasState.db.pagos.filter(p => p.tenantId === this.currentTenant?.id && U.dayOf(p.fecha) === T && p.metodo !== 'renovacion');
+        },
+        recaudadoHoy() {
+          return this.pagosHoy.reduce((sum, p) => sum + (p.valor || 0), 0);
+        },
+        cobradoHoyCobrador() {
+          const T = U.today();
+          return saasState.db.pagos
+            .filter(p => p.cobradorId === this.currentCobrador?.id && U.dayOf(p.fecha) === T && p.metodo !== 'renovacion')
+            .reduce((sum, p) => sum + (p.valor || 0), 0);
+        },
+        metaHoyCobrador() {
+          return this.clientesRuta.reduce((sum, cl) => {
+            const cr = this.getCredito(cl.id);
+            return sum + (cr ? cr.valorCuota : 0);
+          }, 0);
+        },
+        autorizacionesPendientes() {
+          return saasState.db.autorizaciones.filter(a => a.tenantId === this.currentTenant?.id && a.estado === 'pendiente');
+        },
+        totalMRR() {
+          return this.tenants.reduce((sum, t) => {
+            const plan = this.getPlan(t.planId);
+            return sum + (plan ? plan.precio : 0);
+          }, 0);
+        },
+        permisosPorCategoria() {
+          const CATALOGO_PERMISOS = [
+            { id: 'recaudo_cobrar', nombre: 'Registrar Cobros', desc: 'Permite registrar abonos y visitas sin pago en campo', cat: 'Operación Calle' },
+            { id: 'recaudo_geocerca_bypass', nombre: 'Ignorar Geocerca', desc: 'Permite cobrar a más de 50 metros sin requerir llave', cat: 'Operación Calle' },
+            { id: 'ventas_crear', nombre: 'Registrar Nuevas Ventas', desc: 'Permite colocar préstamos a clientes nuevos o renovaciones', cat: 'Ventas y Créditos' },
+            { id: 'ventas_aprobar', nombre: 'Aprobar Pre-Ventas', desc: 'Autorizar solicitudes de crédito que superen cupo', cat: 'Ventas y Créditos' },
+            { id: 'caja_abrir_cerrar', nombre: 'Apertura y Cierre de Caja', desc: 'Realizar cuadre diario y registrar arqueo físico', cat: 'Flujo de Caja' },
+            { id: 'caja_modificar_base', nombre: 'Modificar Base Inicial', desc: 'Ajustar la base de dinero entregada al cobrador', cat: 'Flujo de Caja' },
+            { id: 'gastos_registrar', nombre: 'Registrar Gastos de Ruta', desc: 'Reportar gastos de gasolina, viáticos y repuestos', cat: 'Flujo de Caja' },
+            { id: 'gastos_aprobar', nombre: 'Aprobar Pre-Gastos', desc: 'Autorizar gastos imprevistos por encima del límite', cat: 'Flujo de Caja' },
+            { id: 'rutas_reordenar', nombre: 'Modificar y Optimizar Rutas', desc: 'Alterar el orden de visita de los clientes', cat: 'Rutas Inteligentes' },
+            { id: 'clientes_modificar_cupo', nombre: 'Modificar Cupos Financieros', desc: 'Aumentar o reducir la línea de crédito del cliente', cat: 'Cartera y Clientes' },
+            { id: 'seguridad_usuarios', nombre: 'Administrar Usuarios y Roles', desc: 'Crear personal, asignar perfiles y bloquear cuentas', cat: 'Seguridad' },
+            { id: 'reportes_auditoria', nombre: 'Ver Auditoría y Exportar Datos', desc: 'Acceso a la bitácora forense de operaciones y CSV', cat: 'Seguridad' }
+          ];
+          const map = {};
+          CATALOGO_PERMISOS.forEach(p => {
+            map[p.cat] = map[p.cat] || [];
+            map[p.cat].push(p);
+          });
+          return map;
+        }
+      },
+      methods: {
+        login(userId, role, tenantId, cobradorId = null) {
+          const u = saasState.db.usuarios.find(x => x.id === userId) || { nombre: 'Usuario Demo', email: 'demo@geocartera.app' };
+          saasActions.setSession({
+            userId,
+            nombre: u.nombre,
+            email: u.email,
+            role,
+            tenantId,
+            cobradorId
+          });
+          this.currentView = role === 'super_admin' ? 'tenants' : 'dashboard';
+          saasActions.showToast(`Bienvenido a GeoCartera, ${u.nombre}`);
+        },
+        switchTenant() {
+          if (this.session && this.session.role === 'super_admin') {
+            this.session.tenantId = this.selectedTenantId;
+            saasActions.setSession({ ...this.session });
+            saasActions.showToast(`Cambiando a empresa: ${this.currentTenant?.nombreEmpresa}`);
+          }
+        },
+        getPlan(planId) {
+          return this.planes.find(p => p.id === planId);
+        },
+        getRutasDeTenant(tenantId) {
+          return saasState.db.cobradores.filter(c => c.tenantId === tenantId);
+        },
+        getCredito(clienteId) {
+          return saasState.db.creditos.find(c => c.clienteId === clienteId && c.estado === 'activo');
+        },
+        getSaldo(clienteId) {
+          const cr = this.getCredito(clienteId);
+          return cr ? saasGetters.saldoDeCredito(cr) : 0;
+        },
+        hasPaidToday(clienteId) {
+          const T = U.today();
+          return saasState.db.pagos.some(p => p.clienteId === clienteId && U.dayOf(p.fecha) === T);
+        },
+        getRoleName(rolId) {
+          const r = saasState.db.roles.find(x => x.id === rolId);
+          return r ? r.nombre : rolId;
+        },
+        getCobrador(cobId) {
+          return saasState.db.cobradores.find(c => c.id === cobId);
+        },
+        openClientModal(cl) {
+          this.selectedClient = cl;
+          this.simulatedDist = Math.floor(Math.random() * 80) + 5;
+          const cr = this.getCredito(cl.id);
+          this.paymentAmount = cr ? cr.valorCuota : 0;
+          this.showPayModal = true;
+        },
+        handlePagar() {
+          if (!this.selectedClient) return;
+          const cr = this.getCredito(this.selectedClient.id);
+          if (!cr) return;
+
+          const res = saasActions.registrarPago({
+            creditoId: cr.id,
+            valor: this.paymentAmount,
+            metodo: this.paymentMethod,
+            dist: this.simulatedDist
+          });
+
+          if (res.error) {
+            saasActions.showToast(res.error, 'danger');
+            return;
+          }
+          if (res.pendiente) {
+            saasActions.showToast('Pago fuera de geocerca: Requiere Llave del Administrador', 'warning');
+          } else {
+            saasActions.showToast('¡Abono registrado exitosamente!');
+          }
+          this.showPayModal = false;
+        },
+        handleCreateTenant() {
+          saasActions.createTenant(this.newTenantForm);
+          this.showNewTenantModal = false;
+          this.newTenantForm = {
+            nombreEmpresa: '',
+            codigo: '',
+            nit: '',
+            ciudad: '',
+            telefono: '',
+            email: '',
+            planId: 'plan_starter'
+          };
+        },
+        handleCreateUser() {
+          saasActions.createUser({
+            ...this.newUserForm,
+            tenantId: this.currentTenant?.id
+          });
+          this.showNewUserModal = false;
+          this.newUserForm = {
+            nombre: '',
+            email: '',
+            rolId: 'cobrador',
+            cobradorId: null
+          };
+        },
+        saveRolePerms() {
+          if (this.editingRole) {
+            saasActions.saveRolePermissions(this.editingRole.id, this.editingRole.permisos);
+            this.editingRole = null;
+          }
+        }
+      },
+      template: `
+        <div class="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+          <!-- Notificación Toast Reactiva Global -->
+          <div v-if="saasState.toast" class="fixed bottom-5 right-5 z-50 animate-bounce">
+            <div :class="saasState.toast.type === 'danger' ? 'bg-rose-600' : saasState.toast.type === 'warning' ? 'bg-amber-600' : 'bg-slate-900'" class="text-white px-4 py-3 rounded-xl shadow-2xl text-sm font-semibold flex items-center gap-2">
+              <BaseIcon name="check" class="w-4 h-4" />
+              <span>{{ saasState.toast.message }}</span>
+            </div>
+          </div>
+
+          <!-- 1. Pantalla de Selección de Perfil / Login Demo -->
+          <div v-if="!session" class="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 border border-slate-100">
+              <div class="text-center mb-8">
+                <div class="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-600/30">
+                  <BaseIcon name="shield" class="w-8 h-8" />
+                </div>
+                <h1 class="text-2xl font-black text-slate-900">GeoCartera SaaS</h1>
+                <p class="text-sm text-slate-500 mt-1">Plataforma Cloud Multi-Tenant con Vue.js 3 y Soporte Offline</p>
+              </div>
+
+              <div class="space-y-4">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Acceso Rápido por Rol</div>
+
+                <button @click="login('usr_super', 'super_admin', null)" class="w-full p-4 rounded-xl border border-indigo-200 hover:border-indigo-600 hover:bg-indigo-50/50 transition flex items-center gap-4 text-left group">
+                  <div class="w-11 h-11 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                    <BaseIcon name="building" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-bold text-slate-900 group-hover:text-indigo-600 transition flex items-center gap-1.5">
+                      <span>Super Administrador SaaS</span>
+                      <span class="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.2 rounded-full">Global</span>
+                    </div>
+                    <div class="text-xs text-slate-500 truncate">Control de Tenants, planes de suscripción y facturación</div>
+                  </div>
+                </button>
+
+                <button @click="login('usr_admin_alfa', 'tenant_admin', 'tenant_1')" class="w-full p-4 rounded-xl border border-emerald-200 hover:border-emerald-600 hover:bg-emerald-50/50 transition flex items-center gap-4 text-left group">
+                  <div class="w-11 h-11 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                    <BaseIcon name="dashboard" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-bold text-slate-900 group-hover:text-emerald-600 transition flex items-center gap-1.5">
+                      <span>Administrador de Empresa</span>
+                      <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.2 rounded-full">Inversiones Alfa</span>
+                    </div>
+                    <div class="text-xs text-slate-500 truncate">Cuadro de mando, arqueo de cajas, llaves OTP, usuarios y rutas</div>
+                  </div>
+                </button>
+
+                <button @click="login('usr_cob1', 'cobrador', 'tenant_1', 'c1')" class="w-full p-4 rounded-xl border border-sky-200 hover:border-sky-600 hover:bg-sky-50/50 transition flex items-center gap-4 text-left group">
+                  <div class="w-11 h-11 rounded-lg bg-sky-600 text-white flex items-center justify-center shrink-0">
+                    <BaseIcon name="route" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-bold text-slate-900 group-hover:text-sky-600 transition flex items-center gap-1.5">
+                      <span>Cobrador Móvil (Ruta Norte)</span>
+                      <span class="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.2 rounded-full">100% Responsive</span>
+                    </div>
+                    <div class="text-xs text-slate-500 truncate">App móvil con modo offline, geocercas 50m y optimización</div>
+                  </div>
+                </button>
+              </div>
+
+              <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                <p class="text-xs text-slate-400">Arquitectura Multi-Tenant totalmente administrable con Vue.js 3</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Aplicación Móvil para Cobradores (100% Responsive PWA) -->
+          <div v-else-if="session.role === 'cobrador'" class="max-w-md mx-auto bg-slate-100 min-h-screen flex flex-col shadow-2xl w-full">
+            <header class="bg-emerald-700 text-white p-4 sticky top-0 z-30 shadow flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-emerald-800 flex items-center justify-center font-bold text-lg">$</div>
+                <div>
+                  <div class="font-bold leading-tight">{{ currentCobrador?.nombre }}</div>
+                  <div class="text-xs text-emerald-200">{{ currentCobrador?.zona }} · {{ currentTenant?.nombreEmpresa }}</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button @click="saasActions.toggleOffline" :class="saasState.isOffline ? 'bg-rose-500' : 'bg-emerald-600'" class="px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow">
+                  <BaseIcon :name="saasState.isOffline ? 'wifioff' : 'wifi'" class="w-3.5 h-3.5" />
+                  <span>{{ saasState.isOffline ? 'Offline' : 'Online' }}</span>
+                </button>
+                <button @click="saasActions.logout" class="p-1.5 rounded-lg hover:bg-emerald-800 text-emerald-100">
+                  <BaseIcon name="logout" class="w-5 h-5" />
+                </button>
+              </div>
+            </header>
+
+            <main class="flex-1 p-4 pb-24 space-y-4">
+              <!-- Banner Recaudo Cobrador -->
+              <div class="bg-gradient-to-r from-emerald-800 to-teal-700 text-white p-5 rounded-2xl shadow-md">
+                <div class="flex justify-between items-start mb-2">
+                  <span class="text-xs font-semibold text-emerald-200 uppercase tracking-wider">Recaudado Hoy</span>
+                  <button @click="saasActions.optimizarRuta(currentCobrador.id)" class="text-xs bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-full font-semibold flex items-center gap-1">
+                    <BaseIcon name="route" class="w-3 h-3" />
+                    <span>Optimizar Ruta (2-opt)</span>
+                  </button>
+                </div>
+                <div class="text-3xl font-black">{{ U.money(cobradoHoyCobrador) }}</div>
+                <div class="w-full bg-black/20 h-2 rounded-full overflow-hidden mt-3">
+                  <div class="bg-emerald-400 h-full rounded-full transition-all" :style="{ width: Math.min(100, (cobradoHoyCobrador / (metaHoyCobrador || 1)) * 100) + '%' }"></div>
+                </div>
+                <div class="flex justify-between text-xs text-emerald-200 mt-2">
+                  <span>Meta: {{ U.money(metaHoyCobrador) }}</span>
+                  <span>{{ clientesRuta.length }} clientes</span>
+                </div>
+              </div>
+
+              <div v-if="saasState.isOffline" class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+                <BaseIcon name="wifioff" class="w-4 h-4 text-amber-600 shrink-0" />
+                <span><b>Modo Offline Activo:</b> Abonos guardados en teléfono. Sincronizan al reconectar.</span>
+              </div>
+
+              <!-- Lista de Clientes de Ruta -->
+              <div v-if="activeMobileTab === 'ruta'" class="space-y-3">
+                <div class="flex justify-between items-center px-1">
+                  <h3 class="font-bold text-slate-800 text-sm">Clientes en Secuencia Puerta a Puerta</h3>
+                  <span class="text-xs text-slate-500 font-medium">Geocerca 50m</span>
+                </div>
+
+                <div v-for="cl in clientesRuta" :key="cl.id" @click="openClientModal(cl)" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3 cursor-pointer hover:border-emerald-500 transition">
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-600 shrink-0">
+                    {{ cl.orden }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline mb-0.5">
+                      <span class="font-bold text-slate-900 text-sm truncate">{{ cl.nombre }}</span>
+                      <span v-if="hasPaidToday(cl.id)" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">PAGÓ</span>
+                      <span v-else class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">PENDIENTE</span>
+                    </div>
+                    <div class="text-xs text-slate-500 truncate">{{ cl.direccion }} · {{ cl.barrio }}</div>
+                    <div class="text-xs font-semibold text-slate-700 mt-1 flex gap-3">
+                      <span>Cuota: <b class="text-emerald-700">{{ U.money(getCredito(cl.id)?.valorCuota) }}</b></span>
+                      <span>Saldo: {{ U.money(getSaldo(cl.id)) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab Mapa Móvil -->
+              <div v-if="activeMobileTab === 'mapa'" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <div class="flex justify-between items-center">
+                  <h3 class="font-bold text-slate-900 text-sm">Geocercas Satelitales</h3>
+                  <button @click="saasActions.showToast('Ubicación GPS sincronizada vía satélite')" class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded font-semibold">
+                    Simular GPS
+                  </button>
+                </div>
+                <div class="border rounded-lg overflow-hidden bg-slate-50 p-2">
+                  <svg viewBox="0 0 350 250" class="w-full h-auto">
+                    <rect width="350" height="250" fill="#f8fafc" rx="8" />
+                    <g v-for="cl in clientesRuta" :key="cl.id" :transform="'translate(' + (cl.x * 0.35) + ',' + (cl.y * 0.35) + ')'">
+                      <circle r="9" :fill="hasPaidToday(cl.id) ? '#16a34a' : '#f59e0b'" stroke="#fff" stroke-width="2" />
+                      <text y="3" text-anchor="middle" font-size="8" font-weight="bold" fill="#fff">{{ cl.orden }}</text>
+                    </g>
+                  </svg>
+                </div>
+                <div class="flex gap-4 text-xs text-slate-500 justify-center">
+                  <span class="flex items-center gap-1"><i class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></i> Pagado</span>
+                  <span class="flex items-center gap-1"><i class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></i> Pendiente</span>
+                </div>
+              </div>
+
+              <!-- Tab Caja Cobrador -->
+              <div v-if="activeMobileTab === 'caja'" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-slate-900 text-sm">Flujo de Efectivo en Calle</h3>
+                <ul class="text-xs space-y-2.5 border-b border-slate-100 pb-4">
+                  <li class="flex justify-between"><span>Base Inicial</span><b>$ 400.000</b></li>
+                  <li class="flex justify-between text-emerald-600"><span>Cobros en Efectivo Hoy</span><b>+ {{ U.money(cobradoHoyCobrador) }}</b></li>
+                  <li class="flex justify-between text-rose-600"><span>Gastos de Ruta</span><b>- $ 0</b></li>
+                  <li class="flex justify-between text-indigo-600 font-bold border-t pt-2 text-sm">
+                    <span>Efectivo Físico Esperado</span>
+                    <b>{{ U.money(400000 + cobradoHoyCobrador) }}</b>
+                  </li>
+                </ul>
+                <button @click="saasActions.showToast('Caja cerrada con éxito')" class="w-full py-2.5 bg-slate-900 hover:bg-black text-white font-bold rounded-lg text-xs shadow">
+                  Cerrar Jornada (Cuadre de Caja)
+                </button>
+              </div>
+            </main>
+
+            <!-- Bottom Navigation -->
+            <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 flex justify-around py-2 z-30 shadow-lg">
+              <button @click="activeMobileTab = 'ruta'" :class="activeMobileTab === 'ruta' ? 'text-emerald-700' : 'text-slate-400'" class="flex flex-col items-center text-[10px] font-bold">
+                <BaseIcon name="route" class="w-5 h-5 mb-0.5" />
+                <span>Mi Ruta</span>
+              </button>
+              <button @click="activeMobileTab = 'mapa'" :class="activeMobileTab === 'mapa' ? 'text-emerald-700' : 'text-slate-400'" class="flex flex-col items-center text-[10px] font-bold">
+                <BaseIcon name="map" class="w-5 h-5 mb-0.5" />
+                <span>Mapa GPS</span>
+              </button>
+              <button @click="activeMobileTab = 'caja'" :class="activeMobileTab === 'caja' ? 'text-emerald-700' : 'text-slate-400'" class="flex flex-col items-center text-[10px] font-bold">
+                <BaseIcon name="wallet" class="w-5 h-5 mb-0.5" />
+                <span>Mi Caja</span>
+              </button>
+            </nav>
+          </div>
+
+          <!-- 3. Plataforma Web SaaS de Administración -->
+          <div v-else class="min-h-screen flex flex-col md:flex-row">
+            <!-- Sidebar -->
+            <aside class="w-full md:w-64 bg-slate-900 text-white shrink-0 flex flex-col shadow-xl">
+              <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-indigo-600/30">
+                  GC
+                </div>
+                <div>
+                  <h1 class="font-black text-lg leading-tight">GeoCartera</h1>
+                  <span class="text-[10px] bg-indigo-500/30 text-indigo-300 font-bold px-2 py-0.5 rounded uppercase">
+                    {{ session.role === 'super_admin' ? 'SuperAdmin SaaS' : 'Empresa Admin' }}
+                  </span>
+                </div>
+              </div>
+
+              <nav class="p-4 space-y-1.5 flex-1">
+                <!-- Opciones SuperAdmin -->
+                <template v-if="session.role === 'super_admin'">
+                  <button @click="currentView = 'tenants'" :class="currentView === 'tenants' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition text-left">
+                    <BaseIcon name="building" />
+                    <span>Gestión de Empresas</span>
+                  </button>
+                  <button @click="currentView = 'dashboard'" :class="currentView === 'dashboard' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition text-left">
+                    <BaseIcon name="dashboard" />
+                    <span>Dashboard Empresa</span>
+                  </button>
+                  <button @click="currentView = 'users'" :class="currentView === 'users' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition text-left">
+                    <BaseIcon name="shield" />
+                    <span>Usuarios y Permisos (RBAC)</span>
+                  </button>
+                </template>
+
+                <!-- Opciones Tenant Admin -->
+                <template v-else>
+                  <button @click="currentView = 'dashboard'" :class="currentView === 'dashboard' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition text-left">
+                    <BaseIcon name="dashboard" />
+                    <span>Panel de Control</span>
+                  </button>
+                  <button @click="currentView = 'users'" :class="currentView === 'users' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition text-left">
+                    <BaseIcon name="shield" />
+                    <span>Usuarios y Roles</span>
+                  </button>
+                </template>
+              </nav>
+
+              <!-- Selector de Tenant (Solo SuperAdmin) -->
+              <div v-if="session.role === 'super_admin'" class="p-4 border-t border-slate-800 bg-slate-950/40">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Empresa en Foco</label>
+                <select v-model="selectedTenantId" @change="switchTenant" class="w-full bg-slate-800 text-white text-xs rounded p-2 border border-slate-700">
+                  <option v-for="t in tenants" :key="t.id" :value="t.id">{{ t.nombreEmpresa }}</option>
+                </select>
+              </div>
+
+              <!-- Footer Sidebar -->
+              <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-xs">
+                    {{ session.nombre.substring(0, 2).toUpperCase() }}
+                  </div>
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-white truncate">{{ session.nombre }}</div>
+                    <div class="text-[10px] text-slate-400 truncate">{{ session.email }}</div>
+                  </div>
+                </div>
+                <button @click="saasActions.logout" class="text-slate-400 hover:text-white p-1 rounded">
+                  <BaseIcon name="logout" class="w-4 h-4" />
+                </button>
+              </div>
+            </aside>
+
+            <!-- Main Content Web -->
+            <main class="flex-1 p-6 md:p-8 overflow-y-auto">
+              <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+                <div class="text-xs font-semibold text-slate-500">
+                  Empresa activa: <b class="text-slate-900">{{ currentTenant?.nombreEmpresa }}</b>
+                  (Plan: <span class="text-indigo-600 font-bold">{{ currentTenant?.planId }}</span>)
+                </div>
+                <button @click="saasActions.resetDatabase" class="text-xs font-semibold text-slate-500 hover:text-rose-600 flex items-center gap-1">
+                  <BaseIcon name="gear" class="w-3.5 h-3.5" />
+                  <span>Restablecer Demo SaaS</span>
+                </button>
+              </div>
+
+              <!-- VISTA 1: GESTIÓN DE EMPRESAS (TENANTS) -->
+              <div v-if="currentView === 'tenants' && session.role === 'super_admin'" class="space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                  <div>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">SaaS Multi-Tenant</span>
+                    <h2 class="text-2xl font-bold text-slate-900 mt-1">Gestión Global de Empresas</h2>
+                    <p class="text-sm text-slate-500">Administra cuentas corporativas, límites de rutas y facturación recurrente.</p>
+                  </div>
+                  <button @click="showNewTenantModal = true" class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition">
+                    <BaseIcon name="plus" />
+                    <span>Nueva Empresa</span>
+                  </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <BaseIcon name="building" />
+                    </div>
+                    <div>
+                      <span class="text-xs font-semibold text-slate-400 uppercase">Empresas Activas</span>
+                      <div class="text-2xl font-extrabold text-slate-900">{{ tenants.length }}</div>
+                    </div>
+                  </div>
+                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <BaseIcon name="cash" />
+                    </div>
+                    <div>
+                      <span class="text-xs font-semibold text-slate-400 uppercase">MRR Recurrente</span>
+                      <div class="text-2xl font-extrabold text-slate-900">{{ U.money(totalMRR) }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tabla de Empresas -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800">Empresas Registradas</h3>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                      <thead>
+                        <tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                          <th class="p-3.5">Empresa / Razón Social</th>
+                          <th class="p-3.5">Código Tenant</th>
+                          <th class="p-3.5">Plan Contratado</th>
+                          <th class="p-3.5">Rutas Asignadas</th>
+                          <th class="p-3.5">Estado</th>
+                          <th class="p-3.5 text-right">Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100">
+                        <tr v-for="t in tenants" :key="t.id">
+                          <td class="p-3.5">
+                            <div class="font-bold text-slate-900">{{ t.nombreEmpresa }}</div>
+                            <div class="text-xs text-slate-500">NIT: {{ t.nit }} · {{ t.ciudad }}</div>
+                          </td>
+                          <td class="p-3.5 font-mono text-xs">{{ t.codigo }}</td>
+                          <td class="p-3.5 font-semibold text-indigo-700">{{ getPlan(t.planId)?.nombre }}</td>
+                          <td class="p-3.5 font-medium text-slate-800">{{ getRutasDeTenant(t.id).length }} rutas</td>
+                          <td class="p-3.5">
+                            <span :class="t.estadoSuscripcion === 'activa' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'" class="px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                              {{ t.estadoSuscripcion.toUpperCase() }}
+                            </span>
+                          </td>
+                          <td class="p-3.5 text-right">
+                            <button @click="saasActions.toggleTenantStatus(t.id)" class="px-2.5 py-1 text-xs font-semibold rounded border border-slate-200">
+                              {{ t.estadoSuscripcion === 'activa' ? 'Suspender' : 'Activar' }}
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VISTA 2: DASHBOARD EMPRESA -->
+              <div v-else-if="currentView === 'dashboard'" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <BaseIcon name="cash" />
+                    </div>
+                    <div>
+                      <span class="text-xs font-semibold text-slate-400 uppercase">Recaudado Hoy</span>
+                      <div class="text-2xl font-extrabold text-slate-900">{{ U.money(recaudadoHoy) }}</div>
+                      <span class="text-xs text-emerald-600 font-medium">{{ pagosHoy.length }} abonos</span>
+                    </div>
+                  </div>
+
+                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <BaseIcon name="wallet" />
+                    </div>
+                    <div>
+                      <span class="text-xs font-semibold text-slate-400 uppercase">Cartera Total</span>
+                      <div class="text-2xl font-extrabold text-slate-900">{{ U.money(saldoCarteraActiva) }}</div>
+                      <span class="text-xs text-slate-500">{{ creditosActivos.length }} activos</span>
+                    </div>
+                  </div>
+
+                  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                      <BaseIcon name="key" />
+                    </div>
+                    <div>
+                      <span class="text-xs font-semibold text-slate-400 uppercase">Llaves Pendientes</span>
+                      <div class="text-2xl font-extrabold text-slate-900">{{ autorizacionesPendientes.length }}</div>
+                      <span class="text-xs text-amber-600 font-medium">Autorizaciones</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Rendimiento de Rutas y Llaves -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-900 text-lg mb-4">Rutas y Cobradores en Tiempo Real</h3>
+                    <div class="space-y-4">
+                      <div v-for="c in cobradores" :key="c.id" class="p-4 rounded-lg border border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                          <div class="w-4 h-4 rounded-full" :style="{ backgroundColor: c.color }"></div>
+                          <div>
+                            <div class="font-bold text-slate-900">{{ c.nombre }}</div>
+                            <div class="text-xs text-slate-500">{{ c.zona }} · Tel: {{ c.tel }}</div>
+                          </div>
+                        </div>
+                        <button @click="saasActions.optimizarRuta(c.id)" class="px-3 py-1.5 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold rounded-lg transition">
+                          Optimizar Ruta 2-opt
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Aprobación de Llaves OTP -->
+                  <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-slate-900 text-lg mb-4">Llaves y Autorizaciones</h3>
+                    <div v-if="autorizacionesPendientes.length === 0" class="text-center py-8 text-slate-400 text-xs">
+                      No hay solicitudes pendientes en este momento.
+                    </div>
+                    <div v-else class="space-y-3">
+                      <div v-for="aut in autorizacionesPendientes" :key="aut.id" class="p-3 rounded-lg border border-amber-200 bg-amber-50 text-xs">
+                        <div class="font-bold text-slate-900">{{ aut.tipo.toUpperCase() }}: {{ U.money(aut.valor) }}</div>
+                        <p class="text-slate-600 my-2">{{ aut.detalle }}</p>
+                        <div class="flex gap-2">
+                          <button @click="saasActions.resolverAutorizacion(aut.id, true)" class="flex-1 py-1 bg-emerald-600 text-white rounded font-bold">
+                            Aprobar
+                          </button>
+                          <button @click="saasActions.resolverAutorizacion(aut.id, false)" class="px-2 py-1 border border-rose-300 text-rose-600 rounded font-semibold">
+                            Rechazar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VISTA 3: USUARIOS Y ROLES (RBAC) -->
+              <div v-else-if="currentView === 'users'" class="space-y-6">
+                <div class="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                  <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Usuarios, Roles y Permisos (RBAC)</h2>
+                    <p class="text-sm text-slate-500">Control granular de facultades operativas para {{ currentTenant?.nombreEmpresa }}</p>
+                  </div>
+                  <button @click="showNewUserModal = true" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow-sm transition">
+                    + Nuevo Usuario
+                  </button>
+                </div>
+
+                <!-- Roles Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div v-for="rol in roles" :key="rol.id" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-slate-900">{{ rol.nombre }}</span>
+                        <span class="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-semibold text-slate-600">{{ rol.permisos.length }} perms</span>
+                      </div>
+                      <p class="text-xs text-slate-500 mb-4">{{ rol.desc }}</p>
+                    </div>
+                    <button @click="editingRole = JSON.parse(JSON.stringify(rol))" class="w-full py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition">
+                      Configurar Permisos
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tabla de Usuarios -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div class="p-5 border-b border-slate-100">
+                    <h3 class="font-bold text-slate-800">Cuentas de Usuarios Registradas</h3>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                      <thead>
+                        <tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                          <th class="p-3.5">Funcionario / Nombre</th>
+                          <th class="p-3.5">Correo Electrónico</th>
+                          <th class="p-3.5">Rol Asignado</th>
+                          <th class="p-3.5">Estado</th>
+                          <th class="p-3.5 text-right">Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100">
+                        <tr v-for="u in usuarios" :key="u.id">
+                          <td class="p-3.5 font-bold text-slate-900">{{ u.nombre }}</td>
+                          <td class="p-3.5 font-mono text-xs">{{ u.email }}</td>
+                          <td class="p-3.5"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 font-semibold text-xs rounded">{{ getRoleName(u.rolId) }}</span></td>
+                          <td class="p-3.5"><span :class="u.estado === 'activo' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'" class="px-2 py-0.5 rounded-full text-xs font-semibold">{{ u.estado.toUpperCase() }}</span></td>
+                          <td class="p-3.5 text-right">
+                            <button @click="saasActions.toggleUserStatus(u.id)" class="px-2.5 py-1 text-xs border rounded">
+                              {{ u.estado === 'activo' ? 'Bloquear' : 'Activar' }}
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+
+          <!-- MODAL REGISTRO ABONO (MÓVIL) -->
+          <div v-if="showPayModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+            <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl max-w-md w-full p-5 max-h-[90vh] overflow-y-auto">
+              <div class="flex justify-between items-start border-b border-slate-100 pb-3 mb-3">
+                <div>
+                  <h3 class="font-bold text-slate-900">{{ selectedClient?.nombre }}</h3>
+                  <p class="text-xs text-slate-500">C.C. {{ selectedClient?.doc }}</p>
+                </div>
+                <button @click="showPayModal = false" class="text-slate-400"><BaseIcon name="x" /></button>
+              </div>
+
+              <div class="p-2.5 rounded-lg mb-4 text-xs" :class="simulatedDist <= 50 ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800 font-semibold'">
+                GPS Cobrador: <b>{{ simulatedDist }} metros</b> {{ simulatedDist <= 50 ? '(En Geocerca)' : '(FUERA DE GEOCERCA > 50m - Exige Llave)' }}
+              </div>
+
+              <form @submit.prevent="handlePagar" class="space-y-4 text-sm">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1 text-xs">Monto a Abonar ($)</label>
+                  <input v-model.number="paymentAmount" type="number" class="w-full px-3 py-2 border rounded-lg font-bold text-emerald-700" required>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1 text-xs">Método de Cobro</label>
+                  <select v-model="paymentMethod" class="w-full px-3 py-2 border rounded-lg text-xs">
+                    <option value="efectivo">Efectivo Físico</option>
+                    <option value="nequi">Nequi / Daviplata</option>
+                    <option value="transferencia">Transferencia Bancaria</option>
+                  </select>
+                </div>
+                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow">
+                  Registrar Abono Recibido
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- MODAL NUEVA EMPRESA -->
+          <div v-if="showNewTenantModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6">
+              <div class="flex justify-between items-center pb-3 border-b mb-4">
+                <h3 class="font-bold text-slate-900 text-lg">Registrar Nueva Empresa (Tenant)</h3>
+                <button @click="showNewTenantModal = false" class="text-slate-400"><BaseIcon name="x" /></button>
+              </div>
+              <form @submit.prevent="handleCreateTenant" class="space-y-4 text-sm">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Nombre Empresa *</label>
+                  <input v-model="newTenantForm.nombreEmpresa" type="text" class="w-full px-3 py-2 border rounded-lg" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Código Tenant *</label>
+                    <input v-model="newTenantForm.codigo" type="text" class="w-full px-3 py-2 border rounded-lg font-mono uppercase" required>
+                  </div>
+                  <div>
+                    <label class="block font-semibold text-slate-700 mb-1">NIT *</label>
+                    <input v-model="newTenantForm.nit" type="text" class="w-full px-3 py-2 border rounded-lg" required>
+                  </div>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Plan SaaS</label>
+                  <select v-model="newTenantForm.planId" class="w-full px-3 py-2 border rounded-lg">
+                    <option v-for="p in planes" :key="p.id" :value="p.id">{{ p.nombre }} ({{ U.money(p.precio) }}/mes)</option>
+                  </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                  <button type="button" @click="showNewTenantModal = false" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                  <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">Crear Empresa</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- MODAL NUEVO USUARIO -->
+          <div v-if="showNewUserModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <div class="flex justify-between items-center pb-3 border-b mb-4">
+                <h3 class="font-bold text-slate-900 text-lg">Nuevo Usuario</h3>
+                <button @click="showNewUserModal = false" class="text-slate-400"><BaseIcon name="x" /></button>
+              </div>
+              <form @submit.prevent="handleCreateUser" class="space-y-4 text-sm">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Nombre Completo *</label>
+                  <input v-model="newUserForm.nombre" type="text" class="w-full px-3 py-2 border rounded-lg" required>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Email *</label>
+                  <input v-model="newUserForm.email" type="email" class="w-full px-3 py-2 border rounded-lg" required>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Rol *</label>
+                  <select v-model="newUserForm.rolId" class="w-full px-3 py-2 border rounded-lg">
+                    <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.nombre }}</option>
+                  </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                  <button type="button" @click="showNewUserModal = false" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                  <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold">Guardar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- MODAL PERMISOS ROL -->
+          <div v-if="editingRole" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] flex flex-col">
+              <div class="flex justify-between items-center pb-3 border-b mb-4">
+                <div>
+                  <h3 class="font-bold text-slate-900 text-lg">Permisos: {{ editingRole.nombre }}</h3>
+                  <p class="text-xs text-slate-500">Configura la matriz RBAC para este rol</p>
+                </div>
+                <button @click="editingRole = null" class="text-slate-400"><BaseIcon name="x" /></button>
+              </div>
+
+              <div class="overflow-y-auto flex-1 pr-2 space-y-4">
+                <div v-for="(catPerms, catName) in permisosPorCategoria" :key="catName" class="border rounded-lg p-4">
+                  <h4 class="font-bold text-sm text-indigo-700 border-b pb-1 mb-3">{{ catName }}</h4>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label v-for="p in catPerms" :key="p.id" class="flex items-start gap-2.5 p-2 rounded border hover:bg-slate-50 cursor-pointer">
+                      <input type="checkbox" :value="p.id" v-model="editingRole.permisos" class="mt-1">
+                      <div>
+                        <div class="text-xs font-bold text-slate-900">{{ p.nombre }}</div>
+                        <div class="text-[11px] text-slate-500">{{ p.desc }}</div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-4 border-t mt-4">
+                <button type="button" @click="editingRole = null" class="px-4 py-2 border rounded-lg text-sm">Cancelar</button>
+                <button type="button" @click="saveRolePerms" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold text-sm">Guardar Permisos</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    createApp(App).mount('#app');
   </script>
 </body>
 </html>
