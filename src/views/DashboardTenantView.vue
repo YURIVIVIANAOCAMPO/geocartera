@@ -178,3 +178,4 @@ function getPorcentaje(cobradorId) {
   return Math.min(100, Math.round((cobrado / meta) * 100));
 }
 </script>
+

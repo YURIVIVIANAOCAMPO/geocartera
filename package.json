@@ -1,6 +1,7 @@
 {
   "name": "geocartera-saas",
   "version": "2.0.0",
+  "type": "module",
   "private": true,
   "description": "GeoCartera SaaS Multi-Tenant - Gestión automatizada de cartera, cobros y rutas en tiempo real con Vue.js 3",
   "scripts": {
@@ -12,7 +13,9 @@
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
     "@vitejs/plugin-vue": "^5.0.4",
+    "tailwindcss": "^4.3.5",
     "vite": "^5.1.6"
   }
 }

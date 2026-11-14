@@ -281,3 +281,4 @@ function handlePagar() {
   selectedClient.value = null;
 }
 </script>
+

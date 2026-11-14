@@ -79,3 +79,4 @@ function login(userId, role, tenantId, cobradorId = null) {
   saasActions.showToast(`Bienvenido a GeoCartera, ${u.nombre}`);
 }
 </script>
+
