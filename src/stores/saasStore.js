@@ -23,6 +23,7 @@ function loadDatabase() {
 
 export const saasState = reactive({
   db: loadDatabase(),
+  locale: localStorage.getItem('gc_saas_locale') || 'es',
   currentSession: JSON.parse(sessionStorage.getItem('gc_saas_session') || 'null'),
   isOffline: sessionStorage.getItem('gc_saas_offline') === '1',
   offlineQueue: JSON.parse(sessionStorage.getItem('gc_saas_queue') || '[]'),
@@ -38,6 +39,11 @@ export const saasActions = {
     saasState.db = getInitialSaaSDatabase();
     saasActions.persist();
     saasActions.showToast('Base de datos SaaS restaurada a estado de fábrica');
+  },
+
+  setLocale(lang) {
+    saasState.locale = lang;
+    localStorage.setItem('gc_saas_locale', lang);
   },
 
   showToast(message, type = 'success') {

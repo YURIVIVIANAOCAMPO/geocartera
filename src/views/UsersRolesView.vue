@@ -6,18 +6,18 @@
           <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Seguridad & RBAC</span>
           <span class="text-xs text-slate-500">Matriz de Acceso</span>
         </div>
-        <h2 class="text-2xl font-bold text-slate-900 mt-1">Gestión de Usuarios, Roles y Permisos</h2>
-        <p class="text-sm text-slate-500">Configuración de niveles de autorización para la empresa actual: <b>{{ currentTenant?.nombreEmpresa }}</b></p>
+        <h2 class="text-2xl font-bold text-slate-900 mt-1">{{ t('rbacTitle') }}</h2>
+        <p class="text-sm text-slate-500">{{ t('rbacSubtitle') }} <b>{{ currentTenant?.nombreEmpresa }}</b></p>
       </div>
 
       <div class="flex gap-2">
         <button @click="showNewRoleModal = true" class="flex items-center gap-2 px-3.5 py-2 border border-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 text-sm">
           <BaseIcon name="shield" />
-          <span>Nuevo Rol</span>
+          <span>{{ t('newRole') }}</span>
         </button>
         <button @click="showNewUserModal = true" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow-sm transition">
           <BaseIcon name="plus" />
-          <span>Nuevo Usuario</span>
+          <span>{{ t('newUser') }}</span>
         </button>
       </div>
     </div>
@@ -28,13 +28,13 @@
         <div>
           <div class="flex justify-between items-center mb-1">
             <span class="font-bold text-slate-900">{{ rol.nombre }}</span>
-            <span class="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-semibold text-slate-600">{{ rol.permisos.length }} perms</span>
+            <span class="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-semibold text-slate-600">{{ rol.permisos.length }} {{ t('rolePermsCount') }}</span>
           </div>
           <p class="text-xs text-slate-500 mb-4">{{ rol.desc }}</p>
         </div>
         <button @click="openEditPerms(rol)" class="w-full py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition flex items-center justify-center gap-1.5">
           <BaseIcon name="gear" class="w-3.5 h-3.5" />
-          <span>Configurar Permisos</span>
+          <span>{{ t('configurePerms') }}</span>
         </button>
       </div>
     </div>
@@ -42,21 +42,21 @@
     <!-- Directorio de Usuarios -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div class="p-5 border-b border-slate-100 flex justify-between items-center">
-        <h3 class="font-bold text-slate-800">Personal Registrado en la Empresa</h3>
-        <span class="text-xs text-slate-400">{{ usuarios.length }} cuentas configuradas</span>
+        <h3 class="font-bold text-slate-800">{{ t('registeredStaff') }}</h3>
+        <span class="text-xs text-slate-400">{{ usuarios.length }} cuentas</span>
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-sm">
           <thead>
             <tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-              <th class="p-3.5">Funcionario / Nombre</th>
-              <th class="p-3.5">Correo Electrónico</th>
-              <th class="p-3.5">Rol Asignado</th>
-              <th class="p-3.5">Ruta Vinculada</th>
-              <th class="p-3.5">Estado</th>
-              <th class="p-3.5">Último Acceso</th>
-              <th class="p-3.5 text-right">Acción</th>
+              <th class="p-3.5">{{ t('colleagueName') }}</th>
+              <th class="p-3.5">{{ t('email') }}</th>
+              <th class="p-3.5">{{ t('assignedRole') }}</th>
+              <th class="p-3.5">{{ t('linkedRoute') }}</th>
+              <th class="p-3.5">{{ t('status') }}</th>
+              <th class="p-3.5">{{ t('lastAccess') }}</th>
+              <th class="p-3.5 text-right">{{ t('actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -72,7 +72,7 @@
                 <span v-if="getCobrador(u.cobradorId)" class="font-semibold text-slate-700">
                   {{ getCobrador(u.cobradorId).zona }}
                 </span>
-                <span v-else class="text-slate-400">Usuario de Oficina</span>
+                <span v-else class="text-slate-400">Usuario Oficina</span>
               </td>
               <td class="p-3.5">
                 <span :class="u.estado === 'activo' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'" class="px-2.5 py-0.5 rounded-full text-xs font-semibold">
@@ -84,7 +84,7 @@
               </td>
               <td class="p-3.5 text-right">
                 <button @click="saasActions.toggleUserStatus(u.id)" :class="u.estado === 'activo' ? 'text-rose-600 border-rose-200 hover:bg-rose-50' : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50'" class="px-2.5 py-1 text-xs font-semibold rounded border">
-                  {{ u.estado === 'activo' ? 'Bloquear' : 'Activar' }}
+                  {{ u.estado === 'activo' ? t('block') : t('activate') }}
                 </button>
               </td>
             </tr>
@@ -98,8 +98,7 @@
       <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
           <div>
-            <h3 class="font-bold text-slate-900 text-lg">Permisos: {{ editingRole.nombre }}</h3>
-            <p class="text-xs text-slate-500">Selecciona las facultades y permisos autorizados para este rol.</p>
+            <h3 class="font-bold text-slate-900 text-lg">{{ t('configurePerms') }}: {{ editingRole.nombre }}</h3>
           </div>
           <button @click="editingRole = null" class="text-slate-400 hover:text-slate-600"><BaseIcon name="x" /></button>
         </div>
@@ -120,8 +119,8 @@
         </div>
 
         <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 mt-4">
-          <button type="button" @click="editingRole = null" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50 text-sm">Cancelar</button>
-          <button type="button" @click="saveRolePerms" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 text-sm">Guardar Permisos</button>
+          <button type="button" @click="editingRole = null" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50 text-sm">{{ t('cancel') }}</button>
+          <button type="button" @click="saveRolePerms" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 text-sm">{{ t('savePerms') }}</button>
         </div>
       </div>
     </div>
@@ -130,30 +129,30 @@
     <div v-if="showNewUserModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
       <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
         <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-          <h3 class="font-bold text-slate-900 text-lg">Crear Nuevo Usuario</h3>
+          <h3 class="font-bold text-slate-900 text-lg">{{ t('newUser') }}</h3>
           <button @click="showNewUserModal = false" class="text-slate-400 hover:text-slate-600"><BaseIcon name="x" /></button>
         </div>
 
         <form @submit.prevent="handleCreateUser" class="space-y-4 text-sm">
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Nombre Completo *</label>
-            <input v-model="newUserForm.nombre" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Ej. Fernando Ramos" required>
+            <label class="block font-semibold text-slate-700 mb-1">{{ t('colleagueName') }} *</label>
+            <input v-model="newUserForm.nombre" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg" required>
           </div>
 
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Correo Electrónico *</label>
-            <input v-model="newUserForm.email" type="email" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="fernando@empresa.co" required>
+            <label class="block font-semibold text-slate-700 mb-1">{{ t('email') }} *</label>
+            <input v-model="newUserForm.email" type="email" class="w-full px-3 py-2 border border-slate-300 rounded-lg" required>
           </div>
 
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Rol y Nivel de Acceso *</label>
+            <label class="block font-semibold text-slate-700 mb-1">{{ t('assignedRole') }} *</label>
             <select v-model="newUserForm.rolId" class="w-full px-3 py-2 border border-slate-300 rounded-lg" required>
               <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.nombre }}</option>
             </select>
           </div>
 
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Vincular a Ruta / Cobrador (Opcional)</label>
+            <label class="block font-semibold text-slate-700 mb-1">{{ t('linkedRoute') }}</label>
             <select v-model="newUserForm.cobradorId" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
               <option :value="null">-- Ninguno (Usuario Administrativo) --</option>
               <option v-for="c in cobradores" :key="c.id" :value="c.id">{{ c.nombre }} ({{ c.zona }})</option>
@@ -161,8 +160,8 @@
           </div>
 
           <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
-            <button type="button" @click="showNewUserModal = false" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50">Cancelar</button>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700">Guardar Usuario</button>
+            <button type="button" @click="showNewUserModal = false" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50">{{ t('cancel') }}</button>
+            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700">{{ t('saveUser') }}</button>
           </div>
         </form>
       </div>
@@ -174,7 +173,13 @@
 import { ref, computed } from 'vue';
 import { saasState, saasActions, saasGetters } from '../stores/saasStore.js';
 import { U } from '../utils/formatters.js';
+import { i18n } from '../utils/i18n.js';
 import BaseIcon from '../components/BaseIcon.vue';
+
+function t(key) {
+  const lang = saasState.locale || 'es';
+  return (i18n[lang] && i18n[lang][key]) || (i18n['es'] && i18n['es'][key]) || key;
+}
 
 const currentTenant = saasGetters.currentTenant;
 
@@ -259,4 +264,3 @@ function handleCreateUser() {
   };
 }
 </script>
-
