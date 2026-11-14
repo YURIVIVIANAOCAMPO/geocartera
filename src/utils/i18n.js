@@ -8,7 +8,7 @@ export const i18n = {
     collectorRole: 'Cobrador Móvil',
     activeTenant: 'Empresa activa',
     plan: 'Plan',
-    resetDemo: 'Restablecer Demo SaaS',
+    resetDemo: 'Restablecer Demo',
     resetConfirm: 'Base de datos SaaS restaurada a estado de fábrica',
     offline: 'Offline',
     online: 'Online',
@@ -18,13 +18,18 @@ export const i18n = {
     welcome: 'Bienvenido a GeoCartera',
     langEs: 'Español',
     langPt: 'Português',
+    searchPlaceholder: 'Buscar clientes, cobros, rutas o recibos...',
+    notifications: 'Notificaciones',
+    noNotifications: 'Todo al día. No hay alertas críticas.',
 
     // Menú Lateral
-    menuTenants: 'Gestión de Empresas (Tenants)',
+    menuTenants: 'Gestión de Empresas',
     menuDashboard: 'Panel de Control',
-    menuUsers: 'Usuarios, Roles y Permisos (RBAC)',
+    menuUsers: 'Usuarios y Permisos',
     tenantInFocus: 'Empresa en Foco',
     logout: 'Cerrar Sesión',
+    systemStatus: 'Estado del Sistema',
+    allServicesOperational: 'Sistemas 100% Operativos',
 
     // SuperAdmin Tenants
     saasCenter: 'SaaS Control Center',
@@ -104,13 +109,15 @@ export const i18n = {
     expectedPhysicalCash: 'Efectivo Físico Esperado',
     closeDayCashbox: 'Cerrar Jornada (Cuadre de Caja)',
     registerPaymentModal: 'Registrar Abono Recibido',
-    amountToPay: 'Monto a Abonar ($)',
+    amountToPay: 'Monto a Abonar',
     paymentMethod: 'Método de Cobro',
-    cashMethod: 'Efectivo Físico',
-    digitalMethod: 'Nequi / Pix / Transferencia',
-    bankMethod: 'Transferencia Bancaria',
+    cashMethod: 'Dinheiro Físico',
+    digitalMethod: 'PIX Instantâneo',
+    bankMethod: 'Transferência Bancária',
     inGeofence: '(En Geocerca)',
     outGeofence: '(FUERA DE GEOCERCA > 50m - Exige Llave)',
+    receiptTitle: 'Comprobante de Pago Digital',
+    receiptSentWhatsApp: 'Enviar Recibo por WhatsApp',
 
     // Login Selector
     quickAccessByRole: 'Selecciona Perfil de Demostración',
@@ -131,7 +138,7 @@ export const i18n = {
     collectorRole: 'Cobrador Móvel',
     activeTenant: 'Empresa ativa',
     plan: 'Plano',
-    resetDemo: 'Restaurar Demo SaaS',
+    resetDemo: 'Restaurar Demo',
     resetConfirm: 'Banco de dados SaaS restaurado para o estado de fábrica',
     offline: 'Offline',
     online: 'Online',
@@ -141,13 +148,18 @@ export const i18n = {
     welcome: 'Bem-vindo ao GeoCartera',
     langEs: 'Español',
     langPt: 'Português',
+    searchPlaceholder: 'Buscar clientes, cobranças, rotas ou recibos...',
+    notifications: 'Notificações',
+    noNotifications: 'Tudo em dia. Não há alertas pendentes.',
 
     // Menú Lateral
-    menuTenants: 'Gestão de Empresas (Tenants)',
+    menuTenants: 'Gestão de Empresas',
     menuDashboard: 'Painel de Controle',
-    menuUsers: 'Usuários, Funções e Permissões (RBAC)',
+    menuUsers: 'Usuários e Permissões',
     tenantInFocus: 'Empresa em Foco',
     logout: 'Encerrar Sessão',
+    systemStatus: 'Status do Sistema',
+    allServicesOperational: 'Sistemas 100% Operacionais',
 
     // SuperAdmin Tenants
     saasCenter: 'Centro de Controle SaaS',
@@ -227,13 +239,15 @@ export const i18n = {
     expectedPhysicalCash: 'Dinheiro Físico Esperado',
     closeDayCashbox: 'Fechar Caixa do Dia',
     registerPaymentModal: 'Registrar Pagamento Recebido',
-    amountToPay: 'Valor a Pagar ($ / R$)',
+    amountToPay: 'Valor a Pagar',
     paymentMethod: 'Forma de Pagamento',
     cashMethod: 'Dinheiro Físico',
-    digitalMethod: 'Pix / Transferência Digital',
+    digitalMethod: 'PIX Instantâneo',
     bankMethod: 'Transferência Bancária',
     inGeofence: '(Na Cerca Eletrônica)',
     outGeofence: '(FORA DA CERCA > 50m - Exige Chave)',
+    receiptTitle: 'Comprovante de Pagamento Digital',
+    receiptSentWhatsApp: 'Enviar Recibo por WhatsApp',
 
     // Login Selector
     quickAccessByRole: 'Selecione o Perfil de Demonstração',
@@ -245,4 +259,3 @@ export const i18n = {
     loginCollectorDesc: 'App móvel 100% responsivo, modo offline e GPS de 50m'
   }
 };
-
