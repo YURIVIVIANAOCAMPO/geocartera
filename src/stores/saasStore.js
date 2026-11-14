@@ -2,14 +2,14 @@ import { reactive, computed } from 'vue';
 import { getInitialSaaSDatabase } from './mockSaaSData.js';
 import { U } from '../utils/formatters.js';
 
-const STORAGE_KEY = 'geocartera_vue_saas_v2';
+const STORAGE_KEY = 'geocartera_vue_saas_v2_brl';
 
 function loadDatabase() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed.version === '2.0.0-vue-saas' && parsed.seedDate === U.today()) {
+      if (parsed.version === '2.0.0-vue-saas-brl' && parsed.seedDate === U.today()) {
         return parsed;
       }
     }
@@ -23,7 +23,7 @@ function loadDatabase() {
 
 export const saasState = reactive({
   db: loadDatabase(),
-  locale: localStorage.getItem('gc_saas_locale') || 'es',
+  locale: localStorage.getItem('gc_saas_locale') || 'pt',
   currentSession: JSON.parse(sessionStorage.getItem('gc_saas_session') || 'null'),
   isOffline: sessionStorage.getItem('gc_saas_offline') === '1',
   offlineQueue: JSON.parse(sessionStorage.getItem('gc_saas_queue') || '[]'),

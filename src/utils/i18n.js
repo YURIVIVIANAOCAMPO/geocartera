@@ -245,3 +245,4 @@ export const i18n = {
     loginCollectorDesc: 'App móvel 100% responsivo, modo offline e GPS de 50m'
   }
 };
+
