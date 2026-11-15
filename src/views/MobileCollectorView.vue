@@ -16,26 +16,19 @@
         </div>
 
         <div class="flex items-center gap-1.5">
-          <!-- Switcher Idioma en Móvil -->
-          <button 
-            @click="toggleLang" 
-            class="px-2 py-1 bg-black/20 hover:bg-black/30 rounded-lg text-xs font-bold text-emerald-200 border border-white/10 transition"
-          >
-            {{ saasState.locale === 'es' ? 'ES' : 'PT' }}
-          </button>
-
           <!-- Toggle Offline / Modo Avión -->
           <button 
-            @click="saasActions.toggleOffline" 
+            @click="toggleOfflineMode" 
             :class="saasState.isOffline ? 'bg-rose-500 shadow-rose-900/50' : 'bg-emerald-600 shadow-emerald-900/50'" 
             class="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 shadow-md transition-all active:scale-95"
+            :title="saasState.isOffline ? t('offline') : t('online')"
           >
             <BaseIcon :name="saasState.isOffline ? 'wifioff' : 'wifi'" size="xs" />
             <span>{{ saasState.isOffline ? t('offline') : t('online') }}</span>
           </button>
 
           <!-- Salir -->
-          <button @click="saasActions.logout" class="p-1.5 rounded-xl hover:bg-white/10 text-emerald-100 transition">
+          <button @click="logoutAction" class="p-1.5 rounded-xl hover:bg-white/10 text-emerald-100 transition">
             <BaseIcon name="logout" size="sm" />
           </button>
         </div>
@@ -54,8 +47,8 @@
               </span>
             </div>
             <button 
-              @click="saasActions.optimizarRuta(currentCobrador.id)" 
-              class="text-xs bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-400/30 px-3 py-1 rounded-full font-bold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+              @click="optimizeSequence" 
+              class="text-xs bg-indigo-600/40 hover:bg-indigo-600/60 text-indigo-200 border border-indigo-400/30 px-3 py-1 rounded-full font-bold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
             >
               <BaseIcon name="spark" size="xs" />
               <span>{{ t('optimizeRoute2opt') }}</span>
@@ -92,7 +85,54 @@
 
         <!-- Pestaña 1: Mi Ruta Diaria -->
         <div v-if="activeTab === 'ruta'" class="space-y-3">
-          <div class="flex justify-between items-center px-1">
+          <!-- Buscador y Filtros Rápidos de Clientes -->
+          <div class="space-y-2">
+            <div class="relative">
+              <input 
+                v-model="searchClientQuery" 
+                type="text" 
+                :placeholder="t('searchClient')" 
+                class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-2xs transition"
+              />
+              <div class="absolute left-3 top-3 text-slate-400 pointer-events-none">
+                <BaseIcon name="search" size="xs" />
+              </div>
+              <button 
+                v-if="searchClientQuery" 
+                @click="searchClientQuery = ''" 
+                class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- Filtros: Todos / Pendientes / Cobrados -->
+            <div class="flex gap-1.5 p-1 bg-slate-200/80 rounded-2xl text-xs font-bold">
+              <button 
+                @click="filterStatus = 'todos'" 
+                :class="filterStatus === 'todos' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                class="flex-1 py-1.5 rounded-xl transition text-center"
+              >
+                {{ t('filterAll') }} ({{ clientesRuta.length }})
+              </button>
+              <button 
+                @click="filterStatus = 'pendientes'" 
+                :class="filterStatus === 'pendientes' ? 'bg-amber-500 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                class="flex-1 py-1.5 rounded-xl transition text-center"
+              >
+                {{ t('filterPending') }} ({{ countPendientes }})
+              </button>
+              <button 
+                @click="filterStatus = 'cobrados'" 
+                :class="filterStatus === 'cobrados' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                class="flex-1 py-1.5 rounded-xl transition text-center"
+              >
+                {{ t('filterPaid') }} ({{ countCobrados }})
+              </button>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center px-1 pt-1">
             <h3 class="font-extrabold text-slate-800 text-sm tracking-wide">{{ t('doorToDoorSequence') }}</h3>
             <span class="text-[11px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
               {{ t('gpsLimit') }}
@@ -102,10 +142,10 @@
           <!-- Tarjetas de Clientes Amigables e Intuitivas -->
           <div class="space-y-2.5">
             <div 
-              v-for="cl in clientesRuta" 
+              v-for="cl in filteredClients" 
               :key="cl.id" 
               @click="openClientModal(cl)" 
-              class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3.5 cursor-pointer hover:border-emerald-500 hover:shadow-md transition active:scale-[0.99]"
+              class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3.5 cursor-pointer hover:border-emerald-500 hover:shadow-md transition active:scale-[0.99]"
             >
               <div 
                 :class="[
@@ -138,11 +178,19 @@
                   <span>{{ cl.direccion }} · {{ cl.barrio }}</span>
                 </div>
 
-                <div class="text-xs font-semibold text-slate-700 mt-2 flex gap-4 pt-1.5 border-t border-slate-100">
+                <div class="text-xs font-semibold text-slate-700 mt-2 flex justify-between pt-1.5 border-t border-slate-100">
                   <span>{{ t('installment') }}: <b class="text-emerald-700 font-extrabold">{{ U.money(getCredito(cl.id)?.valorCuota, 'BRL', saasState.locale) }}</b></span>
                   <span>{{ t('balance') }}: {{ U.money(getSaldo(cl.id), 'BRL', saasState.locale) }}</span>
                 </div>
               </div>
+            </div>
+
+            <!-- Empty State cuando no hay clientes en el filtro -->
+            <div v-if="filteredClients.length === 0" class="text-center py-10 bg-white rounded-3xl border border-slate-200 p-6 text-slate-500 text-xs">
+              <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
+                <BaseIcon name="check" size="md" />
+              </div>
+              <p class="font-bold text-slate-700 text-sm">{{ t('allClientsVisited') }}</p>
             </div>
           </div>
         </div>
@@ -204,7 +252,7 @@
           </div>
 
           <button 
-            @click="saasActions.showToast(t('cashboxClosedNotice'))" 
+            @click="cerrarCajaAction" 
             class="w-full py-3 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl text-xs shadow-lg transition active:scale-95"
           >
             {{ t('closeDayCashbox') }}
@@ -215,7 +263,7 @@
       <!-- Bottom Navigation Móvil Profesional -->
       <nav class="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 flex justify-around py-2.5 z-30 shadow-2xl">
         <button 
-          @click="activeTab = 'ruta'" 
+          @click="switchTab('ruta')" 
           :class="activeTab === 'ruta' ? 'text-emerald-700 font-black' : 'text-slate-400 font-medium'" 
           class="flex flex-col items-center text-[10px] transition"
         >
@@ -224,7 +272,7 @@
         </button>
 
         <button 
-          @click="activeTab = 'mapa'" 
+          @click="switchTab('mapa')" 
           :class="activeTab === 'mapa' ? 'text-emerald-700 font-black' : 'text-slate-400 font-medium'" 
           class="flex flex-col items-center text-[10px] transition"
         >
@@ -233,7 +281,7 @@
         </button>
 
         <button 
-          @click="activeTab = 'caja'" 
+          @click="switchTab('caja')" 
           :class="activeTab === 'caja' ? 'text-emerald-700 font-black' : 'text-slate-400 font-medium'" 
           class="flex flex-col items-center text-[10px] transition"
         >
@@ -248,34 +296,88 @@
           <div class="flex justify-between items-start border-b border-slate-100 pb-3 mb-4">
             <div>
               <h3 class="font-extrabold text-slate-900 text-base leading-tight">{{ selectedClient.nombre }}</h3>
-              <p class="text-xs text-slate-500 mt-0.5">CPF/DOC: {{ selectedClient.doc }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">CPF/DOC: {{ selectedClient.doc }} · {{ selectedClient.barrio }}</p>
             </div>
             <button @click="selectedClient = null" class="text-slate-400 hover:text-slate-700 p-1">
               <BaseIcon name="x" size="md" />
             </button>
           </div>
 
-          <!-- Alerta de Proximidad GPS -->
+          <!-- Alerta de Proximidad GPS Interactiva -->
           <div 
             :class="[
-              'p-3 rounded-2xl mb-4 text-xs font-semibold flex items-center gap-2.5',
+              'p-3 rounded-2xl mb-4 text-xs font-semibold flex items-center justify-between',
               simulatedDist <= 50 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
             ]"
           >
-            <BaseIcon name="pin" size="sm" class="shrink-0" />
-            <span>GPS: <b>{{ simulatedDist }} metros</b> {{ simulatedDist <= 50 ? t('inGeofence') : t('outGeofence') }}</span>
+            <div class="flex items-center gap-2">
+              <BaseIcon name="pin" size="sm" class="shrink-0" />
+              <span>GPS: <b>{{ simulatedDist }}m</b> {{ simulatedDist <= 50 ? t('inGeofence') : t('outGeofence') }}</span>
+            </div>
+            <button 
+              type="button" 
+              @click="toggleDistanceSim" 
+              class="text-[10px] font-bold px-2 py-0.5 bg-white/80 rounded-lg border border-slate-300 hover:bg-white"
+            >
+              {{ simulatedDist <= 50 ? 'Test >50m' : 'Test <50m' }}
+            </button>
           </div>
 
-          <form @submit.prevent="handlePagar" class="space-y-4 text-sm">
+          <!-- Pestaña de Operación: Cobrar / Reportar No Pago -->
+          <div class="flex gap-2 mb-4 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+            <button 
+              type="button" 
+              @click="clientActionTab = 'pagar'" 
+              :class="clientActionTab === 'pagar' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-600'"
+              class="flex-1 py-1.5 rounded-lg transition"
+            >
+              {{ t('registerPaymentModal') }}
+            </button>
+            <button 
+              type="button" 
+              @click="clientActionTab = 'nopago'" 
+              :class="clientActionTab === 'nopago' ? 'bg-white text-rose-700 shadow-xs' : 'text-slate-600'"
+              class="flex-1 py-1.5 rounded-lg transition"
+            >
+              {{ t('reportNoPayBtn') }}
+            </button>
+          </div>
+
+          <!-- Formulario 1: Cobrar Abono -->
+          <form v-if="clientActionTab === 'pagar'" @submit.prevent="handlePagar" class="space-y-4 text-sm">
             <div>
               <label class="block font-bold text-slate-700 mb-1.5 text-xs">{{ t('amountToPay') }} (R$) *</label>
               <input 
                 v-model.number="paymentAmount" 
                 type="number" 
                 step="0.01" 
-                class="w-full px-4 py-3 border border-slate-300 rounded-2xl text-xl font-extrabold text-emerald-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20" 
+                class="w-full px-4 py-3 border border-slate-300 rounded-2xl text-2xl font-black text-emerald-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20" 
                 required
               >
+              <!-- Botones rápidos de importe -->
+              <div class="flex gap-2 mt-2 text-xs font-bold">
+                <button 
+                  type="button" 
+                  @click="setQuickAmount(1)" 
+                  class="flex-1 py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition text-[11px]"
+                >
+                  1 Cuota
+                </button>
+                <button 
+                  type="button" 
+                  @click="setQuickAmount(2)" 
+                  class="flex-1 py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition text-[11px]"
+                >
+                  2 Cuotas
+                </button>
+                <button 
+                  type="button" 
+                  @click="setQuickAmount('total')" 
+                  class="flex-1 py-1 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition text-[11px]"
+                >
+                  Total
+                </button>
+              </div>
             </div>
 
             <div>
@@ -297,6 +399,121 @@
               {{ t('registerPaymentModal') }}
             </button>
           </form>
+
+          <!-- Formulario 2: Reportar No Pago -->
+          <div v-else class="space-y-4 text-xs font-semibold">
+            <p class="text-slate-500">{{ t('reportNoPay') }}</p>
+            <div class="space-y-2">
+              <label 
+                v-for="motivo in motivosNoPago" 
+                :key="motivo.id" 
+                @click="selectedMotivo = motivo.id" 
+                :class="selectedMotivo === motivo.id ? 'border-rose-500 bg-rose-50 text-rose-900' : 'border-slate-200 bg-white text-slate-700'"
+                class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition shadow-2xs"
+              >
+                <input type="radio" :value="motivo.id" v-model="selectedMotivo" class="text-rose-600 focus:ring-rose-500">
+                <span>{{ motivo.label }}</span>
+              </label>
+            </div>
+
+            <button 
+              type="button" 
+              @click="handleReportarNoPago" 
+              class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl text-xs shadow-md transition active:scale-95"
+            >
+              {{ t('reportNoPayBtn') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DEL TICKET TÉRMICO DIGITAL (POS 58MM) -->
+      <div v-if="generatedReceipt" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-slate-800 space-y-4">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <span class="text-[11px] font-black uppercase tracking-wider text-slate-400">{{ t('thermalReceiptPreview') }}</span>
+            <button @click="generatedReceipt = null" class="text-slate-400 hover:text-slate-700">
+              <BaseIcon name="x" size="sm" />
+            </button>
+          </div>
+
+          <!-- Aspecto de Ticket Térmico Físico -->
+          <div class="bg-amber-50/50 p-4 rounded-2xl border border-dashed border-amber-200 font-mono text-xs text-slate-800 space-y-2.5 shadow-inner">
+            <div class="text-center border-b border-dashed border-slate-300 pb-2">
+              <div class="font-black text-sm text-slate-900">{{ currentTenant?.nombreEmpresa }}</div>
+              <div class="text-[10px] text-slate-500">CNPJ: {{ currentTenant?.nit }}</div>
+              <div class="text-[10px] text-slate-500">{{ currentTenant?.ciudad }}</div>
+            </div>
+
+            <div class="flex justify-between text-[11px]">
+              <span>{{ t('receiptNumber') }}:</span>
+              <b>#{{ generatedReceipt.reciboNum }}</b>
+            </div>
+
+            <div class="flex justify-between text-[11px]">
+              <span>Fecha / Hora:</span>
+              <span>{{ U.fmtDateTime(generatedReceipt.fecha, saasState.locale) }}</span>
+            </div>
+
+            <div class="border-y border-dashed border-slate-300 py-2 space-y-1">
+              <div class="flex justify-between">
+                <span>Cliente:</span>
+                <b class="truncate max-w-[150px]">{{ generatedReceipt.clienteNombre }}</b>
+              </div>
+              <div class="flex justify-between text-slate-500 text-[10px]">
+                <span>Doc:</span>
+                <span>{{ generatedReceipt.clienteDoc }}</span>
+              </div>
+              <div class="flex justify-between text-emerald-800 font-extrabold text-sm pt-1">
+                <span>{{ t('paidAmount') }}:</span>
+                <span>{{ U.money(generatedReceipt.valor, 'BRL', saasState.locale) }}</span>
+              </div>
+            </div>
+
+            <div class="space-y-0.5 text-[10px] text-slate-600">
+              <div class="flex justify-between">
+                <span>{{ t('previousBalance') }}:</span>
+                <span>{{ U.money(generatedReceipt.saldoAnterior, 'BRL', saasState.locale) }}</span>
+              </div>
+              <div class="flex justify-between font-bold text-slate-900">
+                <span>{{ t('currentBalance') }}:</span>
+                <span>{{ U.money(generatedReceipt.saldoActual, 'BRL', saasState.locale) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Método:</span>
+                <span class="uppercase font-bold">{{ generatedReceipt.metodo }}</span>
+              </div>
+            </div>
+
+            <!-- Simulación Código QR y Firma Digital -->
+            <div class="pt-2 border-t border-dashed border-slate-300 flex items-center justify-between text-[9px] text-slate-400">
+              <div>
+                <div>{{ t('qrVerification') }}</div>
+                <div class="font-mono text-slate-600 font-bold">SEC-{{ generatedReceipt.reciboNum }}-GC</div>
+              </div>
+              <div class="w-10 h-10 bg-slate-900 text-white flex items-center justify-center font-bold text-[8px] rounded">
+                QR CODE
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de Acción: Compartir WhatsApp e Imprimir -->
+          <div class="space-y-2 pt-1">
+            <button 
+              @click="shareOnWhatsApp" 
+              class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-700/20 transition active:scale-95"
+            >
+              <span>📲</span>
+              <span>{{ t('shareWhatsApp') }}</span>
+            </button>
+            <button 
+              @click="printReceiptAction" 
+              class="w-full py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition"
+            >
+              <span>🖨️</span>
+              <span>{{ t('printReceipt') }}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -309,6 +526,7 @@ import { ref, computed } from 'vue';
 import { saasState, saasActions, saasGetters } from '../stores/saasStore.js';
 import { U } from '../utils/formatters.js';
 import { i18n } from '../utils/i18n.js';
+import { sound } from '../utils/sound.js';
 import BaseIcon from '../components/BaseIcon.vue';
 
 function t(key) {
@@ -316,12 +534,15 @@ function t(key) {
   return (i18n[lang] && i18n[lang][key]) || (i18n['es'] && i18n['es'][key]) || key;
 }
 
-function toggleLang() {
-  const next = saasState.locale === 'es' ? 'pt' : 'es';
-  saasActions.setLocale(next);
-}
-
 const activeTab = ref('ruta');
+const searchClientQuery = ref('');
+const filterStatus = ref('todos'); // 'todos' | 'pendientes' | 'cobrados'
+const clientActionTab = ref('pagar'); // 'pagar' | 'nopago'
+const selectedMotivo = ref('ausente');
+
+const generatedReceipt = ref(null);
+
+const currentTenant = saasGetters.currentTenant;
 const currentCobrador = computed(() => {
   const cid = saasState.currentSession?.cobradorId || 'c1';
   return saasState.db.cobradores.find(c => c.id === cid) || saasState.db.cobradores[0];
@@ -331,6 +552,29 @@ const clientesRuta = computed(() => {
   return saasState.db.clientes
     .filter(c => c.cobradorId === currentCobrador.value?.id)
     .sort((a, b) => a.orden - b.orden);
+});
+
+const countCobrados = computed(() => {
+  return clientesRuta.value.filter(c => hasPaidToday(c.id)).length;
+});
+
+const countPendientes = computed(() => {
+  return clientesRuta.value.filter(c => !hasPaidToday(c.id)).length;
+});
+
+const filteredClients = computed(() => {
+  return clientesRuta.value.filter(cl => {
+    // Filtro por estado
+    if (filterStatus.value === 'cobrados' && !hasPaidToday(cl.id)) return false;
+    if (filterStatus.value === 'pendientes' && hasPaidToday(cl.id)) return false;
+    
+    // Filtro por texto
+    const q = searchClientQuery.value.trim().toLowerCase();
+    if (!q) return true;
+    return cl.nombre.toLowerCase().includes(q) || 
+           cl.direccion.toLowerCase().includes(q) || 
+           cl.barrio.toLowerCase().includes(q);
+  });
 });
 
 const cobradoHoy = computed(() => {
@@ -356,6 +600,12 @@ const simulatedDist = ref(15);
 const paymentAmount = ref(0);
 const paymentMethod = ref('dinheiro');
 
+const motivosNoPago = computed(() => [
+  { id: 'ausente', label: t('noPayReasonAbsent') },
+  { id: 'dinero', label: t('noPayReasonNoMoney') },
+  { id: 'cerrado', label: t('noPayReasonClosed') }
+]);
+
 const routePoints = computed(() => {
   return clientesRuta.value.map(c => `${c.x * 0.4},${c.y * 0.4}`).join(' ');
 });
@@ -374,15 +624,59 @@ function hasPaidToday(clienteId) {
   return saasState.db.pagos.some(p => p.clienteId === clienteId && U.dayOf(p.fecha) === T);
 }
 
+function switchTab(tab) {
+  sound.playTap();
+  activeTab.value = tab;
+}
+
+function toggleOfflineMode() {
+  sound.playTap();
+  saasActions.toggleOffline();
+}
+
+function logoutAction() {
+  sound.playTap();
+  saasActions.logout();
+}
+
+function optimizeSequence() {
+  sound.playTap();
+  saasActions.optimizarRuta(currentCobrador.value?.id);
+}
+
 function openClientModal(cl) {
+  sound.playTap();
   selectedClient.value = cl;
-  simulatedDist.value = Math.floor(Math.random() * 80) + 5;
+  clientActionTab.value = 'pagar';
+  simulatedDist.value = Math.floor(Math.random() * 45) + 5; // Comienza dentro de geocerca
   const cr = getCredito(cl.id);
-  paymentAmount.value = cr ? cr.valorCuota : 0;
+  paymentAmount.value = cr ? cr.valorCuota : 50;
+}
+
+function toggleDistanceSim() {
+  sound.playTap();
+  simulatedDist.value = simulatedDist.value <= 50 ? 85 : 15;
+}
+
+function setQuickAmount(factor) {
+  sound.playTap();
+  const cr = getCredito(selectedClient.value?.id);
+  if (!cr) return;
+  if (factor === 'total') {
+    paymentAmount.value = getSaldo(selectedClient.value.id);
+  } else {
+    paymentAmount.value = cr.valorCuota * factor;
+  }
 }
 
 function simularGPS() {
+  sound.playTap();
   saasActions.showToast(t('gpsSyncedNotice'));
+}
+
+function cerrarCajaAction() {
+  sound.playSuccess();
+  saasActions.showToast(t('cashboxClosedNotice'));
 }
 
 function handlePagar() {
@@ -390,6 +684,7 @@ function handlePagar() {
   const cr = getCredito(selectedClient.value.id);
   if (!cr) return;
 
+  const saldoAntes = getSaldo(selectedClient.value.id);
   const res = saasActions.registrarPago({
     creditoId: cr.id,
     valor: paymentAmount.value,
@@ -403,9 +698,55 @@ function handlePagar() {
   }
   if (res.pendiente) {
     saasActions.showToast(t('keyRequiredWarning'), 'warning');
-  } else {
-    saasActions.showToast(t('paymentSuccessNotice'));
+    selectedClient.value = null;
+    return;
   }
+
+  // Reproducir sonido de cobro exitoso
+  sound.playSuccess();
+  saasActions.showToast(t('paymentSuccessNotice'));
+
+  // Generar ticket térmico digital
+  generatedReceipt.value = {
+    reciboNum: saasState.db.seqRecibo || (1000 + Math.floor(Math.random() * 900)),
+    clienteNombre: selectedClient.value.nombre,
+    clienteDoc: selectedClient.value.doc,
+    valor: paymentAmount.value,
+    saldoAnterior: saldoAntes,
+    saldoActual: Math.max(0, saldoAntes - paymentAmount.value),
+    metodo: paymentMethod.value,
+    fecha: new Date().toISOString()
+  };
+
   selectedClient.value = null;
+}
+
+function handleReportarNoPago() {
+  sound.playTap();
+  saasActions.showToast(t('noPayReported'), 'warning');
+  selectedClient.value = null;
+}
+
+function shareOnWhatsApp() {
+  sound.playTap();
+  if (!generatedReceipt.value) return;
+  const r = generatedReceipt.value;
+  const text = `*COMPROBANTE DE PAGO - ${currentTenant.value?.nombreEmpresa}*\n` +
+               `📄 *Recibo:* #${r.reciboNum}\n` +
+               `👤 *Cliente:* ${r.clienteNombre}\n` +
+               `💰 *Valor Pagado:* R$ ${r.valor.toFixed(2)}\n` +
+               `💳 *Saldo Restante:* R$ ${r.saldoActual.toFixed(2)}\n` +
+               `📅 *Fecha:* ${new Date(r.fecha).toLocaleDateString()}\n` +
+               `✅ Registrado con GeoCartera Mobile`;
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text);
+  }
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function printReceiptAction() {
+  sound.playSuccess();
+  window.print();
 }
 </script>

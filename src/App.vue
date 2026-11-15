@@ -1,5 +1,71 @@
 <template>
   <div class="h-screen w-screen bg-slate-900 text-slate-800 flex flex-col overflow-hidden font-sans select-none antialiased">
+    <!-- Barra Superior de Control de Demostración Rápida (Demo Mode Pill) -->
+    <header class="bg-slate-950 border-b border-slate-800/90 px-3 sm:px-6 py-2 flex items-center justify-between text-xs text-slate-300 shrink-0 z-50 shadow-md">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="flex items-center gap-1.5 font-bold text-white tracking-wide">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-xs font-black text-indigo-400 hidden sm:inline">GeoCartera SaaS</span>
+          <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold">
+            Demo Live
+          </span>
+        </div>
+      </div>
+
+      <!-- Selector Rápido de Roles para la Demostración -->
+      <div class="flex items-center gap-1 sm:gap-2">
+        <span class="text-[11px] text-slate-400 hidden lg:inline mr-1 font-medium">{{ t('demoRolesBanner') }}</span>
+        
+        <button 
+          @click="quickSwitchRole('super_admin')" 
+          :class="session?.role === 'super_admin' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-850'" 
+          class="px-2.5 py-1 rounded-lg text-[11px] transition flex items-center gap-1 border border-slate-800"
+          title="Super Administrador SaaS"
+        >
+          <span>👑</span>
+          <span class="hidden md:inline">{{ t('superAdminRole') }}</span>
+        </button>
+
+        <button 
+          @click="quickSwitchRole('tenant_admin')" 
+          :class="session?.role === 'tenant_admin' ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/30' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-850'" 
+          class="px-2.5 py-1 rounded-lg text-[11px] transition flex items-center gap-1 border border-slate-800"
+          title="Administrador de Empresa"
+        >
+          <span>🏢</span>
+          <span class="hidden md:inline">{{ t('tenantAdminRole') }}</span>
+        </button>
+
+        <button 
+          @click="quickSwitchRole('cobrador')" 
+          :class="session?.role === 'cobrador' ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-850'" 
+          class="px-2.5 py-1 rounded-lg text-[11px] transition flex items-center gap-1 border border-slate-800"
+          title="Cobrador Móvil en Campo"
+        >
+          <span>📱</span>
+          <span class="hidden md:inline">{{ t('collectorRole') }}</span>
+        </button>
+
+        <!-- Selector Idioma Compacto en Barra Superior -->
+        <div class="flex items-center bg-slate-900 rounded-lg p-0.5 border border-slate-800 text-[10px] ml-1 sm:ml-2">
+          <button 
+            @click="saasActions.setLocale('es')" 
+            :class="saasState.locale === 'es' ? 'bg-indigo-600 text-white font-black' : 'text-slate-400 hover:text-white'" 
+            class="px-2 py-0.5 rounded transition"
+          >
+            ES
+          </button>
+          <button 
+            @click="saasActions.setLocale('pt')" 
+            :class="saasState.locale === 'pt' ? 'bg-indigo-600 text-white font-black' : 'text-slate-400 hover:text-white'" 
+            class="px-2 py-0.5 rounded transition"
+          >
+            PT
+          </button>
+        </div>
+      </div>
+    </header>
+
     <!-- Toast Global con animación y diseño flotante -->
     <Transition
       enter-active-class="transform ease-out duration-300 transition"
@@ -39,12 +105,12 @@
     </div>
 
     <!-- 2. App Móvil para Cobrador (Layout optimizado móvil) -->
-    <div v-else-if="session.role === 'cobrador'" class="h-full w-full overflow-hidden flex flex-col bg-slate-950">
+    <div v-else-if="session.role === 'cobrador'" class="flex-1 w-full overflow-hidden flex flex-col bg-slate-950">
       <MobileCollectorView />
     </div>
 
     <!-- 3. Plataforma Web SaaS (SuperAdmin o Tenant Admin) -->
-    <div v-else class="h-screen w-screen flex flex-row overflow-hidden bg-slate-100">
+    <div v-else class="flex-1 w-full flex flex-row overflow-hidden bg-slate-100">
       
       <!-- BACKDROP PARA MÓVIL/TABLET -->
       <div 
@@ -248,29 +314,32 @@
             <button 
               @click="saasActions.resetDatabase" 
               class="text-xs font-semibold text-slate-500 hover:text-rose-600 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-200 hover:bg-rose-50/50 transition shadow-xs"
+              :title="t('resetDemo')"
             >
-              <BaseIcon name="gear" size="xs" />
+              <BaseIcon name="refresh" size="xs" />
               <span class="hidden sm:inline">{{ t('resetDemo') }}</span>
             </button>
 
-            <div class="w-px h-5 bg-slate-200 hidden sm:block"></div>
+            <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs border border-slate-200">
-                {{ currentTenant?.codigo?.substring(0, 2) || 'BR' }}
+            <!-- Avatar y datos de sesión -->
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0">
+                {{ session.tenantId ? 'FI' : 'SA' }}
               </div>
-              <span class="text-xs font-bold text-slate-700 font-mono hidden md:inline">{{ currentTenant?.codigo }}</span>
+              <div class="text-left hidden md:block">
+                <div class="text-xs font-extrabold text-slate-800 leading-tight truncate max-w-[140px]">{{ session.nombre }}</div>
+                <div class="text-[10px] text-slate-400 truncate max-w-[140px]">{{ session.email }}</div>
+              </div>
             </div>
           </div>
         </header>
 
-        <!-- Contenedor Scrollable del Cuerpo de la Vista -->
+        <!-- Contenedor de Vistas -->
         <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div class="max-w-7xl mx-auto">
-            <TenantsManagementView v-if="currentView === 'tenants' && session.role === 'super_admin'" />
-            <DashboardTenantView v-else-if="currentView === 'dashboard'" />
-            <UsersRolesView v-else-if="currentView === 'users'" />
-          </div>
+          <TenantsManagementView v-if="currentView === 'tenants'" />
+          <DashboardTenantView v-else-if="currentView === 'dashboard'" />
+          <UsersRolesView v-else-if="currentView === 'users'" />
         </main>
       </div>
 
@@ -279,37 +348,81 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { saasState, saasActions, saasGetters } from './stores/saasStore.js';
-import { isMobileSidebarOpen } from './stores/uiStore.js';
 import { i18n } from './utils/i18n.js';
+import { sound } from './utils/sound.js';
 import BaseIcon from './components/BaseIcon.vue';
+
+// Vistas
 import LoginSelectorView from './views/LoginSelectorView.vue';
+import MobileCollectorView from './views/MobileCollectorView.vue';
 import TenantsManagementView from './views/TenantsManagementView.vue';
 import DashboardTenantView from './views/DashboardTenantView.vue';
 import UsersRolesView from './views/UsersRolesView.vue';
-import MobileCollectorView from './views/MobileCollectorView.vue';
-
-const session = computed(() => saasState.currentSession);
-const currentTenant = saasGetters.currentTenant;
-const currentView = ref(session.value?.role === 'super_admin' ? 'tenants' : 'dashboard');
-const selectedTenantId = ref(currentTenant.value?.id || 'tenant_1');
 
 function t(key) {
-  const lang = saasState.locale || 'pt';
+  const lang = saasState.locale || 'es';
   return (i18n[lang] && i18n[lang][key]) || (i18n['es'] && i18n['es'][key]) || key;
 }
 
+const session = computed(() => saasState.currentSession);
+const currentTenant = saasGetters.currentTenant;
+
+const currentView = ref('dashboard');
+const isMobileSidebarOpen = ref(false);
+const selectedTenantId = ref(currentTenant.value?.id || 'tenant_1');
+
+watch(session, (newS) => {
+  if (newS?.role === 'super_admin') {
+    currentView.value = 'tenants';
+  } else if (newS?.role === 'tenant_admin') {
+    currentView.value = 'dashboard';
+  }
+}, { immediate: true });
+
 function navigate(view) {
+  sound.playTap();
   currentView.value = view;
   isMobileSidebarOpen.value = false;
 }
 
 function switchTenant() {
-  if (session.value) {
-    session.value.tenantId = selectedTenantId.value;
-    saasActions.setSession({ ...session.value });
-    saasActions.showToast(`${t('activeTenant')}: ${currentTenant.value?.nombreEmpresa}`);
+  sound.playTap();
+  saasActions.switchTenant(selectedTenantId.value);
+}
+
+function quickSwitchRole(role) {
+  sound.playTap();
+  if (role === 'super_admin') {
+    saasActions.setSession({
+      userId: 'usr_super',
+      nombre: 'Super Admin GeoCartera',
+      email: 'master@geocartera.com',
+      role: 'super_admin',
+      tenantId: null,
+      cobradorId: null
+    });
+    currentView.value = 'tenants';
+  } else if (role === 'tenant_admin') {
+    saasActions.setSession({
+      userId: 'usr_admin_alfa',
+      nombre: 'Carlos Eduardo Silveira',
+      email: 'gerencia@inversoesalfa.com.br',
+      role: 'tenant_admin',
+      tenantId: 'tenant_1',
+      cobradorId: null
+    });
+    currentView.value = 'dashboard';
+  } else if (role === 'cobrador') {
+    saasActions.setSession({
+      userId: 'usr_cob1',
+      nombre: 'Mateo Ferreira',
+      email: 'mateo.rota@inversoesalfa.com.br',
+      role: 'cobrador',
+      tenantId: 'tenant_1',
+      cobradorId: 'c1'
+    });
   }
 }
 </script>

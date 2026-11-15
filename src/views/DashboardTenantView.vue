@@ -85,7 +85,7 @@
             <div class="flex justify-between items-center mt-3 text-xs text-slate-500 font-medium">
               <span>{{ t('progress') }}: <b class="text-slate-700">{{ getPorcentaje(c.id) }}%</b></span>
               <button 
-                @click="saasActions.optimizarRuta(c.id)" 
+                @click="optimizarRuta(c.id)" 
                 class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1.5 transition active:scale-95"
               >
                 <BaseIcon name="spark" size="xs" />
@@ -105,7 +105,7 @@
               <p class="text-xs text-slate-500">{{ t('keysModuleSubtitle') }}</p>
             </div>
             <span 
-              :class="autorizacionesPendientes.length > 0 ? 'bg-amber-100 text-amber-900 font-black' : 'bg-slate-100 text-slate-500 font-bold'" 
+              :class="autorizacionesPendientes.length > 0 ? 'bg-amber-100 text-amber-900 font-black animate-pulse' : 'bg-slate-100 text-slate-500 font-bold'" 
               class="px-2.5 py-1 rounded-full text-xs"
             >
               {{ autorizacionesPendientes.length }}
@@ -129,13 +129,14 @@
               <p class="text-slate-600 mb-3 leading-relaxed">{{ aut.detalle }}</p>
               <div class="flex gap-2">
                 <button 
-                  @click="saasActions.resolverAutorizacion(aut.id, true)" 
-                  class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-center shadow-xs transition active:scale-95"
+                  @click="aprobarConModal(aut)" 
+                  class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-center shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                 >
-                  {{ t('approveKey') }}
+                  <BaseIcon name="key" size="xs" />
+                  <span>{{ t('approveKey') }}</span>
                 </button>
                 <button 
-                  @click="saasActions.resolverAutorizacion(aut.id, false)" 
+                  @click="rechazarAutorizacion(aut.id)" 
                   class="px-3.5 py-2 border border-rose-300 text-rose-600 hover:bg-rose-50 rounded-xl font-bold transition active:scale-95"
                 >
                   {{ t('rejectKey') }}
@@ -150,14 +151,71 @@
         </div>
       </div>
     </div>
+
+    <!-- MODAL DE LLAVE OTP GENERADA (EXPERIENCIA DE USUARIO AVANZADA) -->
+    <div v-if="approvedOtpData" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in zoom-in-95 duration-200">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-slate-800 text-center space-y-4">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30">
+          <BaseIcon name="key" size="lg" />
+        </div>
+
+        <div>
+          <h3 class="text-base font-black text-slate-900">{{ t('otpGeneratedTitle') }}</h3>
+          <p class="text-xs text-slate-500 mt-1">{{ t('otpValidFor') }}</p>
+        </div>
+
+        <!-- Visualizador de Código OTP Estilizado en Bloques -->
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-inner flex justify-center items-center gap-2">
+          <span 
+            v-for="(digit, idx) in approvedOtpData.key.split('')" 
+            :key="idx" 
+            class="w-10 h-12 rounded-xl bg-slate-800 text-emerald-400 text-2xl font-mono font-black flex items-center justify-center border border-slate-700 shadow-sm"
+          >
+            {{ digit }}
+          </span>
+        </div>
+
+        <div class="text-[11px] bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-left space-y-1">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Operación:</span>
+            <b class="text-slate-800 uppercase">{{ approvedOtpData.tipo }}</b>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Valor Autorizado:</span>
+            <b class="text-emerald-700 font-extrabold">{{ U.money(approvedOtpData.valor, 'BRL', saasState.locale) }}</b>
+          </div>
+          <div class="text-slate-600 truncate mt-1 pt-1 border-t border-slate-200">
+            {{ approvedOtpData.detalle }}
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button 
+            @click="copiarLlave" 
+            class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-1.5"
+          >
+            <BaseIcon name="check" size="xs" />
+            <span>{{ isCopied ? t('copiedOtp') : t('copyOtp') }}</span>
+          </button>
+          <button 
+            @click="approvedOtpData = null" 
+            class="px-4 py-3 border border-slate-200 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-50 transition"
+          >
+            {{ t('close') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { saasState, saasActions, saasGetters } from '../stores/saasStore.js';
 import { U } from '../utils/formatters.js';
 import { i18n } from '../utils/i18n.js';
+import { sound } from '../utils/sound.js';
 import BaseIcon from '../components/BaseIcon.vue';
 
 function t(key) {
@@ -167,6 +225,9 @@ function t(key) {
 
 const currentTenant = saasGetters.currentTenant;
 const T = U.today();
+
+const approvedOtpData = ref(null);
+const isCopied = ref(false);
 
 const cobradores = computed(() => {
   return saasState.db.cobradores.filter(c => c.tenantId === currentTenant.value?.id);
@@ -211,5 +272,39 @@ function getPorcentaje(cobradorId) {
   const cobrado = getCobradoPorCobrador(cobradorId);
   if (!meta) return 0;
   return Math.min(100, Math.round((cobrado / meta) * 100));
+}
+
+function optimizarRuta(cobradorId) {
+  sound.playTap();
+  saasActions.optimizarRuta(cobradorId);
+}
+
+function aprobarConModal(aut) {
+  sound.playKey();
+  const rawKey = Math.floor(100000 + Math.random() * 900000).toString();
+  approvedOtpData.value = {
+    key: rawKey,
+    tipo: aut.tipo,
+    valor: aut.valor,
+    detalle: aut.detalle
+  };
+  isCopied.value = false;
+  saasActions.resolverAutorizacion(aut.id, true);
+}
+
+function rechazarAutorizacion(autId) {
+  sound.playTap();
+  saasActions.resolverAutorizacion(autId, false);
+}
+
+function copiarLlave() {
+  sound.playTap();
+  if (approvedOtpData.value && navigator.clipboard) {
+    navigator.clipboard.writeText(approvedOtpData.value.key);
+    isCopied.value = true;
+    setTimeout(() => {
+      isCopied.value = false;
+    }, 3000);
+  }
 }
 </script>
